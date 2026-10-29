@@ -1,6 +1,6 @@
 # LS 55 Bring-Up and Assessment Report
 
-October 28, 2026 | Completed hardware and RS-232 verification for unit `79787` (firmware `F1`)
+October 28, 2026 | Completed hardware and RS-232 verification for this bench LS 55 (firmware `F1`)
 
 This report archives the initial hardware inspection, RS-232 cable pinout verification, and Stage 1–3 bench results. For day-to-day connection settings and protocol reference, see [../../README.md](../../README.md) and [../reference/serial-protocol.md](../reference/serial-protocol.md). For remaining hardware and software limitations, see [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md).
 
@@ -13,7 +13,7 @@ Bring-up was executed in four gated stages so that serial communications, monoch
 | Gate / Stage | Scope | Status | Evidence Summary |
 | --- | --- | --- | --- |
 | **Gate A** | Pre-power electrical, mechanical, and shipping-clamp inspection | **PASS** (2026-10-28) | Rear plate verified (`120 V, 60 Hz, 150 VA`); shipping clamps removed; MPU/motor startup normal |
-| **Stage 1 (Gate B)** | Prompted RS-232 link, `$ST` status, shutter OFF (`$ES 1`), NVM & accessory check | **PASS** (2026-10-28) | Model `55`, rev `F1`, serial `79787`, `$ME` `0000`, Ex/Em polarizers fitted |
+| **Stage 1 (Gate B)** | Prompted RS-232 link, `$ST` status, shutter OFF (`$ES 1`), NVM & accessory check | **PASS** (2026-10-28) | Model `55`, rev `F1`, serial per `$SN`, `$ME` `0000`, Ex/Em polarizers fitted |
 | **Stage 2 (Gate C)** | Bounded wavelength/slit motion (`$GM`, `$SX`, `$SM`) and single-point `$RD 1` | **PASS** (2026-10-28) | Moves to `350/450 nm` and `5.0 nm` slits verified by readback; baseline restored |
 | **Stage 3** | Empty-compartment emission scans (dark `$ES 1` vs. source ON `$ES 0`) | **PASS** (2026-10-28) | 400–550 nm and 200–900 nm scans completed; dark floor `\|I\| <= 1`; Rayleigh peaks observed |
 | **Gate D** | Secure sample holder, cuvette seating, and optical alignment | **Open** | Loose square-bore block on accessory platform is unverified; see [Known Issues](../issues/known-issues-and-limitations.md) |
@@ -26,7 +26,7 @@ Bring-up was executed in four gated stages so that serial communications, monoch
 
 ### 2.1 Instrument Inspection (Gate A)
 
-- **Rear panel ratings:** Model `LS 55`, serial `79787`, mains rating `120 V, 60 Hz, 150 VA`, fuse marking `2 A Slo Blo`.
+- **Rear panel ratings:** Model `LS 55`, serial matches `$SN` readback (see [../reference/instrument-specs.md](../reference/instrument-specs.md)), mains rating `120 V, 60 Hz, 150 VA`, fuse marking `2 A Slo Blo`.
 - **Rear connectors:** Host control uses the 25-pin female **RS232C Controller** port. The adjacent 15-pin **Autosampler** port and 8-terminal analog/remote-start block are left disconnected.
 - **Power-up behavior:** The instrument initializes in ~60 seconds with normal MPU indicator and stepper homing sequences. The excitation shutter defaults to **ON (`$ES` = 0)** at power-on; software must explicitly set `$ES 1` and verify readback before opening the sample compartment.
 - **Sample compartment:** Contains side mounting supports, rear optical ports, a removable accessory platform, and an unfastened machined square-bore metal block. Neither a complete factory single-cell holder (`L2250140`, which includes return mirrors) nor a positive cuvette seat is confirmed.

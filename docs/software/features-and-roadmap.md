@@ -2,7 +2,7 @@
 
 October 28, 2026 | Post–bring-up software architecture and staged feature build order
 
-With hardware bring-up and RS-232 verification complete ([../assessment/bringup-report.md](../assessment/bringup-report.md)), this guide defines the software features worth building in Python to replace legacy **FL WinLab** workflows. Features are **staged by usefulness** for unit `79787` and the five home-lab experiments in [../experiments/fluorescence-home-lab.md](../experiments/fluorescence-home-lab.md)—not by WinLab chapter order. For hardware specifications and known device constraints, see [../reference/instrument-specs.md](../reference/instrument-specs.md) and [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md).
+With hardware bring-up and RS-232 verification complete ([../assessment/bringup-report.md](../assessment/bringup-report.md)), this guide defines the software features worth building in Python to replace legacy **FL WinLab** workflows. Features are **staged by usefulness** for this bench LS 55 and the five home-lab experiments in [../experiments/fluorescence-home-lab.md](../experiments/fluorescence-home-lab.md)—not by WinLab chapter order. For hardware specifications and known device constraints, see [../reference/instrument-specs.md](../reference/instrument-specs.md) and [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md).
 
 ---
 
@@ -17,7 +17,7 @@ Build **Software Stage 1** before analysis modules. Later stages assume Gate D h
 | **3 — Mixtures and advanced optics** | Sync scan, EEM, emission correction/Φ, Autopol, phosphorescence | Expts **3**, **5**; publishable shapes; polarizers fitted |
 | **4 — Deferred accessories** | Plate/TLC/FFA/sipper/ICBC/Ratio/enzyme/WPR | Not on this DUT (`$AF`); mark `[X]`/`[H]` |
 
-Tags used below: **`[S]`** = pure software over RS-232 · **`[H]`** = needs accessory · **`[R]`** = needs optical reference · **`[X]`** = out of scope on unit `79787`.
+Tags used below: **`[S]`** = pure software over RS-232 · **`[H]`** = needs accessory · **`[R]`** = needs optical reference · **`[X]`** = out of scope on this bench unit.
 
 ---
 
@@ -25,10 +25,10 @@ Tags used below: **`[S]`** = pure software over RS-232 · **`[H]`** = needs acce
 
 Full parameter bounds are tabulated in [../reference/instrument-specs.md](../reference/instrument-specs.md); measurement constraints are summarized in [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md) §6. Key implications for software:
 
-- **Flash block-averaging vs. scan speed:** The pulsed xenon source fires at mains frequency (`60 Hz` on unit `79787`). Slower scan speeds (`$SS 10–1500 nm/min`) average more flashes per wavelength step (e.g., ~50 flashes/point at 30 nm/min vs. 1 flash/point at 1500 nm/min), trading acquisition time directly for signal-to-noise ratio.
+- **Flash block-averaging vs. scan speed:** The pulsed xenon source fires at mains frequency (`60 Hz` on this bench unit per `$HZ`). Slower scan speeds (`$SS 10–1500 nm/min`) average more flashes per wavelength step (e.g., ~50 flashes/point at 30 nm/min vs. 1 flash/point at 1500 nm/min), trading acquisition time directly for signal-to-noise ratio.
 - **12-bit auto-ranging ADC and overload handling:** Dark current is subtracted digitally each cycle, and the output in fluorescence mode (`$PH 0`) is the sample-to-reference ratio. When a peak saturates (`999999` in ASCII scan data or `$PT` returning `0107`), the software must flag the scan as clipped and prompt for narrower slits (`$SX`, `$SM`) or lower PMT voltage (`$PV`).
 - **Excitation shutter management (`$ES`):** To minimize photobleaching (especially in riboflavin and biological samples) and xenon lamp wear, acquisition wrappers should open the shutter (`$ES 0`) immediately before a scan and close it (`$ES 1` with readback verification) in a `finally` block.
-- **Fitted polarizers (`$AF`):** Because excitation and emission polarizer wheels are installed on unit `79787`, Stage 3 can automate fluorescence anisotropy / polarization via `$PX` and `$PM`. Temperature sensor is **not** fitted (`$TP` → `0100`); log an external probe in the sidecar when needed.
+- **Fitted polarizers (`$AF`):** Because excitation and emission polarizer wheels are installed on this bench unit, Stage 3 can automate fluorescence anisotropy / polarization via `$PX` and `$PM`. Temperature sensor is **not** fitted (`$TP` → `0100`); log an external probe in the sidecar when needed.
 
 ---
 
@@ -94,7 +94,7 @@ Encode these in Stage 1–2 pipelines (see also experiment protocols):
 
 Every Stage 1+ acquisition script should emit a paired `.json` metadata file alongside `.csv` and `.png` outputs containing:
 
-- **Provenance:** UTC timestamp, operator, git commit hash, script name, instrument model (`55`), firmware (`F1`), serial (`79787`).
+- **Provenance:** UTC timestamp, operator, git commit hash, script name, instrument model (`55`), firmware (`F1`), serial (from `$SN`).
 - **Optical & electronic settings:** Mode (`$PH`), excitation/emission wavelengths (`$GM` / `$AL` / `$AH`), slits (`$SX`, `$SM`), scan speed (`$SS`), step interval (`$SI`), filter wheel (`$FW`), polarizer positions (`$PX`, `$PM`), PMT voltage (`$PV`), excitation correction (`$CX`), phosphorescence delay/gate/flashes (`$PD`, `$PG`, `$PF`).
 - **Sample & cell metadata:** Sample ID, solvent, concentration/dilution factor, cuvette material and path length, holder ID, ambient or external probe temperature, optional $A_{\text{ex}}$ and $A_{\text{em}}$.
 - **Processing & integrity:** Reference to blank file, applied corrections (blank subtraction, IFE, emission curve), SHA-256 hash of raw log, and any warning/status codes (`0107` overload, Class B repairs — see [../issues/serial-link-glitch-taxonomy.md](../issues/serial-link-glitch-taxonomy.md)).

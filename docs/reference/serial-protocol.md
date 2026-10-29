@@ -8,7 +8,7 @@ Primary authority: PerkinElmer LS 55 User's Guide, release C, March 2007, printe
 
 ## 1. Serial Framing and Flow Control
 
-Verified against the User's Guide (pp. 125–126) and oscilloscope measurements on unit `79787`:
+Verified against the User's Guide (pp. 125–126) and oscilloscope measurements on this bench unit:
 
 - **Framing:** Fixed **9600 baud, 8 data bits, no parity, 1 stop bit (8N1)**.
 - **Command format:** Commands start with `$`, followed by a two-letter uppercase mnemonic, an optional space, and comma-separated arguments (e.g., `b"$GM 350.0,450.0\r"`). Maximum length is 128 characters including the terminator.
@@ -35,7 +35,7 @@ Parameterless queries read back the current setting unless noted otherwise:
 | `$ES` | `0` (ON), `1` (OFF), or *(none)* | Set or query excitation shutter state. **Note polarity: `0` = source ON, `1` = source OFF.** Power-on default is `0` (ON). |
 | `$ME` | *(none)* | Query non-volatile memory status (`0000` OK, `0108` recovered from backup, `0106` fatal fault). |
 | `$AF` | *(none)* | Query 12 fitted-accessory flags (`0` or `1`, comma-separated). |
-| `$SN` | *(none)* | Query instrument serial number (`79787` on this unit). |
+| `$SN` | *(none)* | Query instrument serial number (see [instrument-specs.md](instrument-specs.md) `$SN` DUT row). |
 | `$HZ` | *(none)* | Query mains frequency (`50` or `60` Hz). |
 | `$GM` | `<ex>,<em_nm>` or *(none)* | Move monochromators (`nm`) or read current wavelengths. |
 | `$SX` / `$SM` | `<slit_nm>` or *(none)* | Set or read excitation (`2.5–15.0 nm`) / emission (`0–20.0 nm`) slit bandwidths. |

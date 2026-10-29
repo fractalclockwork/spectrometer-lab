@@ -1,6 +1,6 @@
 # Known Issues and Device Limitations
 
-October 28, 2026 | Consolidated reference for LS 55 unit `79787` (firmware `F1`)
+October 28, 2026 | Consolidated reference for this bench LS 55 (firmware `F1`)
 
 This document tracks hardware constraints, firmware quirks, manual discrepancies, and open software/mechanical tasks following bring-up ([../assessment/bringup-report.md](../assessment/bringup-report.md)).
 
@@ -33,7 +33,7 @@ Two distinct anomaly classes were identified during bring-up. Byte-level evidenc
 
 Full specification cross-references are tabulated in [../reference/instrument-specs.md](../reference/instrument-specs.md).
 
-| Topic | Discrepancy in User's Guide | Resolution on Unit `79787` |
+| Topic | Discrepancy in User's Guide | Resolution on this bench unit |
 | --- | --- | --- |
 | **RS-232 DB25 pinout (p. 125)** | Port is labeled `DCE`, but the explicit pin table assigns Pin 2 = *Data from instrument* and Pin 3 = *Data to instrument* (opposite to standard DB25 DCE). | Wire per the explicit direction table: **DE9 Pin 3 (TX) ↔ DB25 Pin 3**, **DE9 Pin 2 (RX) ↔ DB25 Pin 2**, **DE9 Pin 5 ↔ DB25 Pin 7**. See [../assessment/bringup-report.md](../assessment/bringup-report.md) §2.2. |
 | **Emission wavelength upper limit** | Specifications chapter lists `200–650 nm` (standard S5 PMT) and `200–900 nm` (optional R928 PMT); Optical System and `$GM` allow `0` or `200.0–900.0 nm`. | Firmware accepts moves and scans to `900.0 nm`, but installed PMT type (S5 vs. R928) is not readable over RS-232. |
@@ -44,7 +44,7 @@ Full specification cross-references are tabulated in [../reference/instrument-sp
 ## 4. Firmware and Non-Volatile Memory Behavior
 
 - **Live `$ST` formatting shapes:** Firmware `F1` separates model and revision with a period (`55.F1,...`) and joins scan speed and filter response index with a period (`480.019` → speed `480 nm/min`, response `19`). Both are normal firmware conventions handled by `parse_status_payload`.
-- **NVM status codes (`$ME`):** Unit `79787` returns `0000`. If `0108` (*NVM recovered from backup*) ever appears, preserve logs and re-verify wavelength/slit calibration before quantitative work. Code `0106` is a fatal NVM fault requiring service.
+- **NVM status codes (`$ME`):** This bench unit returns `0000`. If `0108` (*NVM recovered from backup*) ever appears, preserve logs and re-verify wavelength/slit calibration before quantitative work. Code `0106` is a fatal NVM fault requiring service.
 - **Excitation correction default (`$CX`):** Defaults to `1` (enabled) at power-on using the stored rhodamine correction curve. Scans return error `0111` if `$CX 1` is active without a valid table.
 
 ---

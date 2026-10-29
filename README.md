@@ -1,6 +1,6 @@
 # spectrometer-lab
 
-Python RS-232 control and acquisition tools for a PerkinElmer **LS 55** fluorescence spectrometer (bench unit serial `79787`, firmware **F1**).
+Python RS-232 control and acquisition tools for a PerkinElmer **LS 55** fluorescence spectrometer (this bench unit, firmware **F1**).
 
 ## Status
 
@@ -61,7 +61,7 @@ python scripts/analyze_serial_glitches.py
 | Category | Document | Description |
 | --- | --- | --- |
 | **Reference** | [docs/reference/serial-protocol.md](docs/reference/serial-protocol.md) | RS-232 framing, prompted DC1 flow, command set, and status codes |
-| **Reference** | [docs/reference/instrument-specs.md](docs/reference/instrument-specs.md) | Published specifications correlated with RS-232 commands and DUT `79787` readbacks |
+| **Reference** | [docs/reference/instrument-specs.md](docs/reference/instrument-specs.md) | Published specifications correlated with RS-232 commands and this bench DUT’s readbacks |
 | **Issues** | [docs/issues/known-issues-and-limitations.md](docs/issues/known-issues-and-limitations.md) | Hardware, firmware, and software limitations plus open TODOs for feature work |
 | **Issues** | [docs/issues/serial-link-glitch-taxonomy.md](docs/issues/serial-link-glitch-taxonomy.md) | Root-cause analysis of Class A (`0x01`) and Class B (`0xb5`) serial anomalies |
 | **Software** | [docs/software/features-and-roadmap.md](docs/software/features-and-roadmap.md) | Post–bring-up software architecture, spectral corrections, and build order |

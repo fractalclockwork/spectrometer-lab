@@ -1,6 +1,6 @@
 # LS 55 Serial-Link Glitch Taxonomy
 
-October 28, 2026 | Root-cause analysis and host mitigations for unit `79787` (firmware `F1`)
+October 28, 2026 | Root-cause analysis and host mitigations for this bench LS 55 (firmware `F1`)
 
 This document analyzes the two RS-232 anomaly classes observed during bring-up at **9600 baud, 8N1 (prompted mode)** and maps them to the parser guards in [`ls55/protocol.py`](../../ls55/protocol.py) and [`ls55/transactions.py`](../../ls55/transactions.py). For a broader list of device limitations, see [known-issues-and-limitations.md](known-issues-and-limitations.md).
 

@@ -1,8 +1,8 @@
-# LS 55 Instrument Specifications (Manual vs. RS-232 vs. DUT `79787`)
+# LS 55 Instrument Specifications (Manual vs. RS-232 vs. DUT)
 
 October 28, 2026 | Reference specification and live configuration table
 
-This table correlates the published specifications and system descriptions in the PerkinElmer LS 55 User's Guide (obtain locally per [../vendor/README.md](../vendor/README.md)) with the RS-232 command set ([serial-protocol.md](serial-protocol.md)) and live readbacks from bench unit **`79787`** (firmware **`F1`**).
+This table correlates the published specifications and system descriptions in the PerkinElmer LS 55 User's Guide (obtain locally per [../vendor/README.md](../vendor/README.md)) with the RS-232 command set ([serial-protocol.md](serial-protocol.md)) and live readbacks from **this bench DUT** (firmware **`F1`**).
 
 - **Committed bring-up records:** [../assessment/bringup-report.md](../assessment/bringup-report.md) (derived from local captures `logs/identity/identity-20261028-212336.json` and `logs/identity_prolific/identity-20261028-220859.json`).
 - **Known limitations and discrepancies:** [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md).
@@ -27,7 +27,7 @@ python scripts/dump_instrument_identity.py \
 
 ## 1. Identity and System State
 
-| Property | Manual Specification | RS-232 Command / Field | DUT `79787` Observed | Notes |
+| Property | Manual Specification | RS-232 Command / Field | DUT Observed | Notes |
 | --- | --- | --- | --- | --- |
 | Model identifier | LS 55 | `$ST` payload prefix (`pp. 153–154`, `txt ~4276–4288`) | `55` | |
 | Firmware revision | Two-character code in `$ST` | `$ST` `<rev>` field | `F1` | Emitted as `55.F1,...` |
@@ -41,13 +41,13 @@ python scripts/dump_instrument_identity.py \
 
 In manual order (`p. 152`): (1) emission mirror, (2) plate reader, (3) **excitation polarizer**, (4) **emission polarizer**, (5) cell holder, (6) well plate reader, (7) stirrer, (8) temperature controller, (9) peristaltic pump, (10) autosampler, (11) fast filter accessory (FFA) excitation, (12) FFA emission.
 
-On unit `79787`, only flags 3 and 4 (**excitation and emission polarizers**) are set (`1`).
+On this bench unit, only flags 3 and 4 (**excitation and emission polarizers**) are set (`1`).
 
 ---
 
 ## 2. Optical Architecture
 
-| Subsystem | Manual Specification | RS-232 Control / Readback | DUT `79787` Observed | Notes |
+| Subsystem | Manual Specification | RS-232 Control / Readback | DUT Observed | Notes |
 | --- | --- | --- | --- | --- |
 | Measurement modes | Fluorescence, phosphorescence, chemi-/bioluminescence (`p. 17`, `txt ~456–458`) | `$PH` (`0` = fluor, `1` = phos, `2` = bio, `p. 145`) | `$PH` = **`0`** | Matches `$ST` mode flag `dc=0` |
 | Excitation source | Pulsed Xe discharge lamp (~20 kW peak, <10 µs FWHM, `p. 17`, `txt ~460–461`) | `$ES` (`0` = ON, `1` = OFF, `p. 148`) | `$ES` = **`1`** (OFF after init) | Power-on default is `0` (ON) |
@@ -84,7 +84,7 @@ On unit `79787`, only flags 3 and 4 (**excitation and emission polarizers**) are
 
 Captured via `scripts/dump_instrument_identity.py`:
 
-| Field / Query | RS-232 Source | DUT `79787` Value | Meaning |
+| Field / Query | RS-232 Source | DUT Value | Meaning |
 | --- | --- | --- | --- |
 | Raw `$ST` payload | `$ST` | `55.F1,0001,365.0,435.0,  480.019,10.0,10.0,  100,   100,\x01 1,   16` | Full status record (after leading DEL `0x7f`) |
 | Mode flags (`0001`) | `$ST` `<ms><mq><dc><fl>` | `0001` | `ms=0` (monochromator scan mode), `mq=0` (synchronous mode off), `dc=0` (fluorescence data collection), `fl=1` (flash lamp active) |
@@ -98,7 +98,7 @@ Captured via `scripts/dump_instrument_identity.py`:
 
 ## 5. Electrical, Mechanical, and Optical Geometry
 
-| Property | Manual Specification | DUT `79787` / Notes |
+| Property | Manual Specification | DUT / Notes |
 | --- | --- | --- |
 | Mains supply | `100 / 120 / 220 / 230 V AC`, `50 / 60 Hz`, `150 VA` (`p. 18`) | Rear plate: **`120 V, 60 Hz, 150 VA`**, `2 A Slo Blo` fuse marking; `$HZ` = `60` |
 | Instrument mass | `~49 kg` net (`~59 kg` packaged, `p. 25`) | Two-person lift required |
@@ -112,7 +112,7 @@ Captured via `scripts/dump_instrument_identity.py`:
 
 These factory specifications cannot be read from RS-232 status registers and require optical validation after Gate D is completed:
 
-| Parameter | Published Specification (`pp. 17–18`) | Validation Method | Status on Unit `79787` |
+| Parameter | Published Specification (`pp. 17–18`) | Validation Method | Status on this bench unit |
 | --- | --- | --- | --- |
 | Wavelength accuracy | `±1.0 nm` | Excitation/emission calibration peaks (`$XC`, `$MC`) or reference standards | Not yet measured |
 | Wavelength reproducibility | `±0.5 nm` | Repeated peak scans | Not yet measured |
