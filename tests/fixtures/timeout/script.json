@@ -1,0 +1,6 @@
+{
+  "commands": {
+    "$ST": []
+  },
+  "read_timeout_empty": true
+}

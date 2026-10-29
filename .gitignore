@@ -1,0 +1,11 @@
+logs/
+tmp/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+.mypy_cache/
+docs/vendor/*
+!docs/vendor/README.md

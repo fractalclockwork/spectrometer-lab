@@ -1,0 +1,8 @@
+{
+  "commands": {
+    "$ST": [
+      "0110\r\n"
+    ]
+  },
+  "read_timeout_empty": false
+}
