@@ -67,5 +67,5 @@ python scripts/analyze_serial_glitches.py
 | **Software** | [docs/software/features-and-roadmap.md](docs/software/features-and-roadmap.md) | Post–bring-up software architecture, spectral corrections, and build order |
 | **Experiments** | [docs/experiments/fluorescence-home-lab.md](docs/experiments/fluorescence-home-lab.md) | Five baseline fluorescence experiments (requires Gate D sample holder) |
 | **Assessment** | [docs/assessment/bringup-report.md](docs/assessment/bringup-report.md) | Completed bring-up report: wiring, adapter comparison, and Stage 1–3 bench records |
+| **Assessment** | [docs/assessment/LS55-UV-fiber-assessment.md](docs/assessment/LS55-UV-fiber-assessment.md) | Low-cost DIY UV fiber probe assessment: bare-fiber candidates, coupling to the compartment block, and tip renewal |
 | **Vendor** | [docs/vendor/README.md](docs/vendor/README.md) | How to obtain the PerkinElmer LS 55 User's Guide (part 09934436) and place it locally |
-# spectrometer-lab

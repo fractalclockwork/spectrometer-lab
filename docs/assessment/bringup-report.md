@@ -16,7 +16,7 @@ Bring-up was executed in four gated stages so that serial communications, monoch
 | **Stage 1 (Gate B)** | Prompted RS-232 link, `$ST` status, shutter OFF (`$ES 1`), NVM & accessory check | **PASS** (2026-10-28) | Model `55`, rev `F1`, serial per `$SN`, `$ME` `0000`, Ex/Em polarizers fitted |
 | **Stage 2 (Gate C)** | Bounded wavelength/slit motion (`$GM`, `$SX`, `$SM`) and single-point `$RD 1` | **PASS** (2026-10-28) | Moves to `350/450 nm` and `5.0 nm` slits verified by readback; baseline restored |
 | **Stage 3** | Empty-compartment emission scans (dark `$ES 1` vs. source ON `$ES 0`) | **PASS** (2026-10-28) | 400–550 nm and 200–900 nm scans completed; dark floor `\|I\| <= 1`; Rayleigh peaks observed |
-| **Gate D** | Secure sample holder, cuvette seating, and optical alignment | **Open** | Loose square-bore block on accessory platform is unverified; see [Known Issues](../issues/known-issues-and-limitations.md) |
+| **Gate D** | Secure sample holder, cuvette seating, and optical alignment | **Open** | Square-bore block **measured but unsecured**; likely missing factory `L2250140` parts (return mirrors / seat); see [Known Issues](../issues/known-issues-and-limitations.md) §5 |
 
 **Scope of verification:** Stages 1–3 confirm RS-232 framing, stepper positioning, shutter actuation, and PMT/ADC readout. They do not establish wavelength calibration accuracy (`±1.0 nm`) or water Raman sensitivity (`500:1` RMS), which require a verified cell holder (Gate D) and reference samples.
 
@@ -29,7 +29,7 @@ Bring-up was executed in four gated stages so that serial communications, monoch
 - **Rear panel ratings:** Model `LS 55`, serial matches `$SN` readback (see [../reference/instrument-specs.md](../reference/instrument-specs.md)), mains rating `120 V, 60 Hz, 150 VA`, fuse marking `2 A Slo Blo`.
 - **Rear connectors:** Host control uses the 25-pin female **RS232C Controller** port. The adjacent 15-pin **Autosampler** port and 8-terminal analog/remote-start block are left disconnected.
 - **Power-up behavior:** The instrument initializes in ~60 seconds with normal MPU indicator and stepper homing sequences. The excitation shutter defaults to **ON (`$ES` = 0)** at power-on; software must explicitly set `$ES 1` and verify readback before opening the sample compartment.
-- **Sample compartment:** Contains side mounting supports, rear optical ports, a removable accessory platform, and an unfastened machined square-bore metal block. Neither a complete factory single-cell holder (`L2250140`, which includes return mirrors) nor a positive cuvette seat is confirmed.
+- **Sample compartment:** Contains side mounting supports, rear optical ports, a removable accessory platform, and an unfastened machined square-bore metal block. Block geometry is **measured but unsecured** (~17 mm square × 42 mm deep; windows 24.81 × 9.82 mm; see [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md) §5). Factory `L2250140` specs remain the reference; measurements of what is installed indicate **return mirrors and a positive factory cuvette seat appear to be missing**. Door-clearance with a seated UV cuvette is still unchecked — Gate D remains open.
 
 ### 2.2 Working DE9-to-DB25 Pinout
 

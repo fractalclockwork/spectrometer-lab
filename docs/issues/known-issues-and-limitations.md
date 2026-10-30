@@ -11,7 +11,7 @@ This document tracks hardware constraints, firmware quirks, manual discrepancies
 | Area | Status | Notes |
 | --- | --- | --- |
 | RS-232 comms, motion, and empty-path scans (Stages 1–3) | **PASS** (2026-10-28) | Verified on both Parallax FTDI and Prolific USB–RS232 adapters |
-| Gate D — Sample holder and cuvette seating | **Open** | Compartment contains an unverified square-bore block on a removable platform |
+| Gate D — Sample holder and cuvette seating | **Open** | Square-bore block **measured** (see §5) but unsecured; likely missing `L2250140` return mirrors / factory seat |
 | Wavelength accuracy (`±1.0 nm`) and water Raman SNR (`500:1`) | **Unvalidated** | Requires Gate D holder and reference standards |
 | Legacy FL WinLab PC software | **Not used** | Replaced by direct Python RS-232 control in [`ls55/`](../../ls55/) |
 
@@ -51,7 +51,27 @@ Full specification cross-references are tabulated in [../reference/instrument-sp
 
 ## 5. Hardware and Accessory Constraints
 
-- **Sample holder (Gate D):** The standard single-position cell holder (`L2250140`) accepts a `12.5 mm` square exterior cuvette (`10 mm` optical path, ~2 mL minimum fill) and incorporates return mirrors that boost excitation and collection efficiency. The nominal **13.5 mm beam-center height** (~9 mm beam height) is measured from the inside base of a cuvette seated in the standard holder—not from the bare compartment floor. Any temporary fixture using the existing platform and square-bore block must be mechanically secured, verified for door clearance, and treated as non-equivalent to `L2250140` for sensitivity claims.
+### Factory holder (published specification)
+
+The standard single-position cell holder (`L2250140`) accepts a `12.5 mm` square exterior cuvette (`10 mm` optical path, ~2 mL minimum fill) and incorporates return mirrors that boost excitation and collection efficiency. The nominal **13.5 mm beam-center height** (~9 mm beam height) is measured from the inside base of a cuvette seated in the standard holder—not from the bare compartment floor. These factory values remain the reference specification for sensitivity and alignment claims.
+
+### Measured square-bore block (what is installed)
+
+The compartment currently holds a machined square-bore metal block on the removable accessory platform—not a complete factory `L2250140`. Compared with the published holder, **return mirrors and a positive factory cuvette seat appear to be missing** (or not present on this fixture). Operator measurements of what is in place (left/right as viewed facing the open compartment):
+
+| Feature | Measurement |
+| --- | --- |
+| Sample bore (plan) | **~17 mm** square |
+| Bore depth | **42 mm** |
+| Left and right optical windows | **24.81 mm (horizontal) × 9.82 mm (vertical)** |
+| Exterior | Mounting-screw holes present |
+| Side bore / port (left) | **~8 mm** |
+| Side bore / port (right) | **~3 mm** |
+
+Window orientation is recorded as horizontal × vertical so the **9.82 mm** axis aligns with the factory ~9 mm beam height. A `12.5 mm` exterior cuvette fits the ~17 mm bore with clearance. Gate D remains **open** until the block is mechanically secured, door clearance is verified with a seated 4-window UV cuvette, and any missing factory parts are accounted for—do not treat this fixture as optically equivalent to `L2250140` for sensitivity claims. Because this unit is an e-waste salvage with no accessory budget, this block and its side ports are also being evaluated as a mounting/coupling fixture for a low-cost DIY bare-fiber sample probe; see [../assessment/LS55-UV-fiber-assessment.md](../assessment/LS55-UV-fiber-assessment.md).
+
+### Other accessories
+
 - **Fitted accessories (`$AF`):** Reports `0,0,1,1,0,0,0,0,0,0,0,0,0` — **excitation and emission polarizers** are fitted (`$PX` / `$PM`). No temperature controller (`$TP` returns `0100`), cell-holder sensor, fast filter accessory (FFA), or plate reader is installed.
 - **Unexposed hardware parameters:** Xenon lamp hours and PMT detector variant (modified S5 vs. R928) have no RS-232 query commands.
 
@@ -69,7 +89,8 @@ Software features ([../software/features-and-roadmap.md](../software/features-an
 
 ## 7. Open TODOs for Next Stage
 
-- [ ] **Gate D holder qualification:** Measure the existing accessory platform and square-bore block (bore depth, aperture height, mounting threads), secure cuvette seating, and verify full door closure with a 4-window UV cuvette.
+- [x] **Gate D geometry measurement:** Square-bore block measured (~17 mm square × 42 mm deep; windows 24.81 × 9.82 mm; left ~8 mm / right ~3 mm side bores; mounting-screw holes present) — see §5.
+- [ ] **Gate D holder qualification (remaining):** Secure the measured block to the accessory platform; verify positive cuvette seating and full door closure with a 4-window UV cuvette; account for missing factory parts (return mirrors / `L2250140` seat) before any sensitivity equivalence claims, or adapt the block as a low-cost DIY fiber-coupling fixture ([../assessment/LS55-UV-fiber-assessment.md](../assessment/LS55-UV-fiber-assessment.md)).
 - [ ] **Scan abort verification:** Exercise `$AB` during an active scan and confirm `0099` completion handling in [`ls55/transactions.py`](../../ls55/transactions.py).
 - [ ] **`$GM` readback sanitizer:** Add optional Class B single-byte corruption detection/retry for `$GM` wavelength readbacks in [`ls55/protocol.py`](../../ls55/protocol.py).
 - [ ] **Oscilloscope isolation of Class B (`0xb5`):** If the Parallax adapter or long cable is reused, capture DB25 pin 2 on the MSO7104B simultaneously with `ttyUSB` to isolate cable vs. USB–UART bridge framing.

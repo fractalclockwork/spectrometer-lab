@@ -103,8 +103,9 @@ Captured via `scripts/dump_instrument_identity.py`:
 | Mains supply | `100 / 120 / 220 / 230 V AC`, `50 / 60 Hz`, `150 VA` (`p. 18`) | Rear plate: **`120 V, 60 Hz, 150 VA`**, `2 A Slo Blo` fuse marking; `$HZ` = `60` |
 | Instrument mass | `~49 kg` net (`~59 kg` packaged, `p. 25`) | Two-person lift required |
 | Ambient operating range | `15–35 °C`, `≤75% RH` non-condensing (`p. 23`) | Leave ~200 mm clearance at left-side power switch |
-| Standard cell holder | Part `L2250140`: `12.5 mm` square exterior cuvette, `10 mm` path, integral return mirrors (`pp. 38, 55`) | Gate D open; see [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md) §5 |
-| Beam geometry in cuvette | Beam ~9 mm high; beam center **13.5 mm above inside base of cuvette in standard holder** (`pp. 47, 51`), ~2 mL min volume | Datum is inside the seated cell, not the bare compartment floor |
+| Standard cell holder | Part `L2250140`: `12.5 mm` square exterior cuvette, `10 mm` path, integral return mirrors (`pp. 38, 55`) | **Published factory spec retained.** Complete `L2250140` not confirmed installed; return mirrors / factory seat appear missing vs. this part |
+| Measured square-bore block (DUT) | — (fixture currently in compartment; not claimed as `L2250140`) | What is in place, operator-measured: ~17 mm square bore × 42 mm deep; windows **24.81 × 9.82 mm** (H×V); left ~8 mm / right ~3 mm side ports; mounting-screw holes present. **Measured but unsecured** — Gate D still open; geometry table in [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md) §5 |
+| Beam geometry in cuvette | Beam ~9 mm high; beam center **13.5 mm above inside base of cuvette in standard holder** (`pp. 47, 51`), ~2 mL min volume | Factory datum remains inside the seated cell in `L2250140`, not the bare compartment floor; DUT window height (9.82 mm) is consistent with ~9 mm beam height but does not imply optical equivalence without the full holder |
 
 ---
 
