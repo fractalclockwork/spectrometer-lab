@@ -65,7 +65,7 @@ Both adapters see **Class A (`0x01`)** at byte offset 57 of every `$ST` response
 | --- | --- | --- |
 | `$ST` (status) | `55.F1,0001,365.0,435.0,  480.019,10.0,10.0,  100,   100,\x01 1,   16` | Model `55`, firmware `F1`, modes `0001`, Ex `365.0 nm`, Em `435.0 nm`, speed `480 nm/min`, response code `19`, slits `10.0 nm`, gate/delay `1.00 ms`, flashcount `1` (with Class A `0x01`), cycle `16 ms` |
 | `$ES 1` -> `$ES` | `0000` -> `1` (`0000`) | Excitation shutter closed (source OFF confirmed) |
-| `$ME` (NVM status) | `0000` | Non-volatile memory healthy (no `0108` backup recovery or `0106` fault) |
+| `$ME` (NVM status) | `0000` | Non-volatile memory healthy (no `0108` backup recovery or `0106` fault); see [nvm-status-and-impact.md](nvm-status-and-impact.md) |
 | `$AF` (accessories) | `0,0,1,1,0,0,0,0,0,0,0,0,0` | Excitation and emission polarizers fitted; no temperature controller or Sipper/FKA |
 | Optional readbacks | `$GM` `365.0,435.0`; `$SX` `10.0`; `$SM` `10.0`; `$FW` `7` (clear); `$PH` `0` (fluorescence) | Clean on Prolific (`$PH` saw a single Class B `0xb5` byte on the earlier Parallax run) |
 

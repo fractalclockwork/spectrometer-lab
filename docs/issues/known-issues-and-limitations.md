@@ -43,6 +43,8 @@ Full specification cross-references are tabulated in [../reference/instrument-sp
 
 ## 4. Firmware and Non-Volatile Memory Behavior
 
+Full analysis of what NVM stores and how it affects intensity, wavelength, and slit behavior on this DUT: [../assessment/nvm-status-and-impact.md](../assessment/nvm-status-and-impact.md).
+
 - **Live `$ST` formatting shapes:** Firmware `F1` separates model and revision with a period (`55.F1,...`) and joins scan speed and filter response index with a period (`480.019` → speed `480 nm/min`, response `19`). Both are normal firmware conventions handled by `parse_status_payload`.
 - **NVM status codes (`$ME`):** This bench unit returns `0000`. If `0108` (*NVM recovered from backup*) ever appears, preserve logs and re-verify wavelength/slit calibration before quantitative work. Code `0106` is a fatal NVM fault requiring service.
 - **Excitation correction default (`$CX`):** Defaults to `1` (enabled) at power-on using the stored rhodamine correction curve. Scans return error `0111` if `$CX 1` is active without a valid table.

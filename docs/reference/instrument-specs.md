@@ -33,7 +33,7 @@ python scripts/dump_instrument_identity.py \
 | Firmware revision | Two-character code in `$ST` | `$ST` `<rev>` field | `F1` | Emitted as `55.F1,...` |
 | Serial number | Instrument serial number | `$SN` (`p. 156`, `txt ~4371–4375`) | **`79787`** | Matches rear panel label |
 | Mains frequency | 50 or 60 Hz (`p. 18`, `txt ~505`) | `$HZ` (`p. 155`, `txt ~4363–4367`) | **`60`** | Matches rear plate (`120 V, 60 Hz`) |
-| NVM status | Non-volatile memory check | `$ME` → `0000` / `0108` / `0106` (`p. 152`, `txt ~4239–4244`) | **`0000`** | Healthy |
+| NVM status | Non-volatile memory check | `$ME` → `0000` / `0108` / `0106` (`p. 152`, `txt ~4239–4244`) | **`0000`** | Healthy; impact analysis in [../assessment/nvm-status-and-impact.md](../assessment/nvm-status-and-impact.md) |
 | Fitted accessories | 12 accessory presence flags | `$AF` (`p. 152`, `txt ~4224–4235`) | `0,0,1,1,0,0,0,0,0,0,0,0,0` | Excitation + emission polarizers fitted |
 | Output pacing mode | Prompted (`DC1`) at power-on | `$RE` (`0` = free-running, `1` = prompted, `p. 153`) | **Prompted (`1`)** | Used by all repo harnesses |
 
