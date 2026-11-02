@@ -1,6 +1,6 @@
 # spectrometer-lab
 
-Python RS-232 control and acquisition tools for a PerkinElmer **LS 55** fluorescence spectrometer (this bench unit, firmware **F1**).
+Python RS-232 control and acquisition toolkit for a PerkinElmer LS 55 fluorescence spectrometer (this bench unit, firmware **F1**).
 
 ## Status
 
