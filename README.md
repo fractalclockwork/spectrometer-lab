@@ -66,6 +66,7 @@ python scripts/analyze_serial_glitches.py
 | **Issues** | [docs/issues/serial-link-glitch-taxonomy.md](docs/issues/serial-link-glitch-taxonomy.md) | Root-cause analysis of Class A (`0x01`) and Class B (`0xb5`) serial anomalies |
 | **Software** | [docs/software/features-and-roadmap.md](docs/software/features-and-roadmap.md) | Post–bring-up software architecture, spectral corrections, and build order |
 | **Experiments** | [docs/experiments/fluorescence-home-lab.md](docs/experiments/fluorescence-home-lab.md) | Five baseline fluorescence experiments (requires Gate D sample holder) |
+| **Experiments** | [docs/experiments/water-raman.md](docs/experiments/water-raman.md) | Distilled-water Raman wavelength/SNR baseline in a quartz cuvette (Ex 350 nm, 10 nm slits) |
 | **Assessment** | [docs/assessment/bringup-report.md](docs/assessment/bringup-report.md) | Completed bring-up report: wiring, adapter comparison, and Stage 1–3 bench records |
 | **Assessment** | [docs/assessment/nvm-status-and-impact.md](docs/assessment/nvm-status-and-impact.md) | NVM contents, `$ME` health on this DUT, and impact on intensity/wavelength/slit operation |
 | **Assessment** | [docs/assessment/LS55-UV-fiber-assessment.md](docs/assessment/LS55-UV-fiber-assessment.md) | Low-cost DIY UV fiber probe assessment: bare-fiber candidates, coupling to the compartment block, and tip renewal |
