@@ -115,6 +115,6 @@ These factory specifications cannot be read from RS-232 status registers and req
 
 | Parameter | Published Specification (`pp. 17–18`) | Validation Method | Status on this bench unit |
 | --- | --- | --- | --- |
-| Wavelength accuracy | `±1.0 nm` | Excitation/emission calibration peaks (`$XC`, `$MC`) or reference standards | Not yet measured |
-| Wavelength reproducibility | `±0.5 nm` | Repeated peak scans | Not yet measured |
-| Sensitivity (Water Raman) | `500:1` RMS SNR (Ex `350 nm`, `10 nm` Ex/Em bandpass) | Distilled water scan in `L2250140` holder | Not yet measured |
+| Wavelength accuracy | `±1.0 nm` | Excitation/emission calibration peaks (`$XC`, `$MC`) or reference standards | DIY water Raman guide check only: technical mean ~`395 nm` vs `397 nm` guide (Δ ≈ `−2 nm`) on unsecured Al block — [../assessment/water-raman-baseline.md](../assessment/water-raman-baseline.md). Factory `±1.0 nm` **not** closed |
+| Wavelength reproducibility | `±0.5 nm` | Repeated peak scans | Technical σ ≈ `1.1 nm` (n=5, same seat); reseat σ ≈ `3.7 nm` — seating-limited |
+| Sensitivity (Water Raman) | `500:1` RMS SNR (Ex `350 nm`, `10 nm` Ex/Em bandpass) | Distilled water scan in `L2250140` holder | DIY fixture absolute-peak SNR ~`123` (~4× below); **not** `L2250140` equivalence |

@@ -12,7 +12,7 @@ This document tracks hardware constraints, firmware quirks, manual discrepancies
 | --- | --- | --- |
 | RS-232 comms, motion, and empty-path scans (Stages 1–3) | **PASS** (2026-10-28) | Verified on both Parallax FTDI and Prolific USB–RS232 adapters |
 | Gate D — Sample holder and cuvette seating | **Open** | Square-bore block **measured** (see §5) but unsecured; likely missing `L2250140` return mirrors / factory seat |
-| Wavelength accuracy (`±1.0 nm`) and water Raman SNR (`500:1`) | **Unvalidated** | Requires Gate D holder and reference standards |
+| Wavelength accuracy (`±1.0 nm`) and water Raman SNR (`500:1`) | **DIY baseline only** | Quartz-cuvette water Raman series `20261103-1629` on the unsecured Al block: peak ~`395 nm` (Δ ≈ `−2 nm`), absolute-peak SNR ~`123` (~4× below `500:1`). **Not** factory-holder validation — see [../assessment/water-raman-baseline.md](../assessment/water-raman-baseline.md) |
 | Legacy FL WinLab PC software | **Not used** | Replaced by direct Python RS-232 control in [`ls55/`](../../ls55/) |
 
 ---
@@ -96,4 +96,5 @@ Software features ([../software/features-and-roadmap.md](../software/features-an
 - [ ] **Scan abort verification:** Exercise `$AB` during an active scan and confirm `0099` completion handling in [`ls55/transactions.py`](../../ls55/transactions.py).
 - [ ] **`$GM` readback sanitizer:** Add optional Class B single-byte corruption detection/retry for `$GM` wavelength readbacks in [`ls55/protocol.py`](../../ls55/protocol.py).
 - [ ] **Oscilloscope isolation of Class B (`0xb5`):** If the Parallax adapter or long cable is reused, capture DB25 pin 2 on the MSO7104B simultaneously with `ttyUSB` to isolate cable vs. USB–UART bridge framing.
-- [ ] **Baseline water Raman check:** Once Gate D is closed, run the standard water Raman scan (Ex `350 nm`, `10 nm` bandpass) to establish a baseline SNR and wavelength peak log.
+- [x] **Baseline water Raman check (DIY fixture):** Series `20261103-1629` — Ex `350 nm`, Em `380–420`, `10 nm` slits, quartz + distilled water; see [../assessment/water-raman-baseline.md](../assessment/water-raman-baseline.md). Factory `500:1` / Gate D–closed redo still open.
+- [ ] **Water Raman after Gate D seat fix:** Re-run the standard method once the block is secured and the cuvette has a positive seat; compare peak scatter and SNR to the DIY baseline.

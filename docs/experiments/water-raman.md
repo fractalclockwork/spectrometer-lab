@@ -114,7 +114,18 @@ Outputs land in `logs/water-raman/`: raw serial log, JSON sidecar (settings, bla
 
 ---
 
-## 8. Sources
+## 8. Results (series `20261103-1629`)
+
+Bench writeup, go/no-go verdict, aggregate peak/SNR tables, and continuum-residual figures:
+
+**[../assessment/water-raman-baseline.md](../assessment/water-raman-baseline.md)**
+
+Summary: optical path **go**; technical peak ~`395 nm` (Δ ≈ `−2 nm`); absolute-peak SNR ~`123` (~4× below factory `500:1` on this DIY fixture); reseat intensity unstable until the cuvette seat is fixed.
+
+---
+
+## 9. Sources
 
 1. PerkinElmer LS 55 published water Raman sensitivity: `500:1` RMS SNR at Ex `350 nm`, `10 nm` Ex/Em bandpass, distilled water in `L2250140` — see [../reference/instrument-specs.md](../reference/instrument-specs.md).
 2. Water O–H Raman (~`3400 cm⁻¹`) appears near **397 nm** under Ex `350 nm` — [../software/features-and-roadmap.md](../software/features-and-roadmap.md).
+3. Series analysis: [../assessment/water-raman-baseline.md](../assessment/water-raman-baseline.md).

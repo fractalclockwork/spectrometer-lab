@@ -5,7 +5,7 @@ Python RS-232 control and acquisition toolkit for a PerkinElmer LS 55 fluorescen
 ## Status
 
 - **Completed:** Hardware bring-up and RS-232 verification (Stages 1–3 **PASS** on 2026-10-28). Serial framing, monochromator/slit positioning, excitation shutter control, and empty-compartment emission scans are verified.
-- **Open:** Gate D sample holder installation and optical performance validation (wavelength accuracy, water Raman SNR). See [Known Issues and Limitations](docs/issues/known-issues-and-limitations.md).
+- **Open:** Gate D sample holder seating/security. DIY water Raman baseline recorded (peak ~395 nm, SNR ~123 on this fixture — not factory `500:1`). See [Water Raman Baseline](docs/assessment/water-raman-baseline.md) and [Known Issues](docs/issues/known-issues-and-limitations.md).
 - **Next stage:** Software feature development ([Software Features and Roadmap](docs/software/features-and-roadmap.md)).
 
 ## Installation
@@ -67,6 +67,7 @@ python scripts/analyze_serial_glitches.py
 | **Software** | [docs/software/features-and-roadmap.md](docs/software/features-and-roadmap.md) | Post–bring-up software architecture, spectral corrections, and build order |
 | **Experiments** | [docs/experiments/fluorescence-home-lab.md](docs/experiments/fluorescence-home-lab.md) | Five baseline fluorescence experiments (requires Gate D sample holder) |
 | **Experiments** | [docs/experiments/water-raman.md](docs/experiments/water-raman.md) | Distilled-water Raman wavelength/SNR baseline in a quartz cuvette (Ex 350 nm, 10 nm slits) |
+| **Assessment** | [docs/assessment/water-raman-baseline.md](docs/assessment/water-raman-baseline.md) | Distilled-water Raman DIY-fixture baseline: go/no-go, peak/SNR, continuum-residual figures |
 | **Assessment** | [docs/assessment/bringup-report.md](docs/assessment/bringup-report.md) | Completed bring-up report: wiring, adapter comparison, and Stage 1–3 bench records |
 | **Assessment** | [docs/assessment/nvm-status-and-impact.md](docs/assessment/nvm-status-and-impact.md) | NVM contents, `$ME` health on this DUT, and impact on intensity/wavelength/slit operation |
 | **Assessment** | [docs/assessment/LS55-UV-fiber-assessment.md](docs/assessment/LS55-UV-fiber-assessment.md) | Low-cost DIY UV fiber probe assessment: bare-fiber candidates, coupling to the compartment block, and tip renewal |
