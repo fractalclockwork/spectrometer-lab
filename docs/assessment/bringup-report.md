@@ -105,15 +105,15 @@ All bring-up harnesses support offline fixture execution (`pytest`) as well as l
 
 ```bash
 # Offline test suite and fixture dry-runs
-pytest -q
-python scripts/run_stage1_serial.py --fixture-dir tests/fixtures/happy_path --gate-a-pass
-python scripts/run_stage2_serial.py --fixture-dir tests/fixtures/stage2_happy --stage1-pass
-python scripts/run_freepath_serial.py --fixture-dir tests/fixtures/freepath_happy --stage2-pass --compartment-closed
+uv run pytest -q
+uv run python scripts/run_stage1_serial.py --fixture-dir tests/fixtures/happy_path --gate-a-pass
+uv run python scripts/run_stage2_serial.py --fixture-dir tests/fixtures/stage2_happy --stage1-pass
+uv run python scripts/run_freepath_serial.py --fixture-dir tests/fixtures/freepath_happy --stage2-pass --compartment-closed
 
 # Live bench execution (close competing serial programs first)
-python scripts/run_stage1_serial.py --port /dev/serial/by-id/<adapter> --gate-a-pass --baud 9600
-python scripts/run_stage2_serial.py --port /dev/serial/by-id/<adapter> --stage1-pass --baud 9600
-python scripts/run_freepath_serial.py --port /dev/serial/by-id/<adapter> --stage2-pass --compartment-closed --baud 9600
+uv run python scripts/run_stage1_serial.py --port /dev/serial/by-id/<adapter> --gate-a-pass --baud 9600
+uv run python scripts/run_stage2_serial.py --port /dev/serial/by-id/<adapter> --stage1-pass --baud 9600
+uv run python scripts/run_freepath_serial.py --port /dev/serial/by-id/<adapter> --stage2-pass --compartment-closed --baud 9600
 ```
 
 ## Sources

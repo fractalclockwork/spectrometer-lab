@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import threading
 import time
+from typing import Callable, Optional
 
 from ls55.protocol import DC1, CRLF, Record, Transaction, encode_command
 from ls55.transport import Transport
+
+OnRecordCallback = Callable[[Record, Transaction], None]
 
 
 class ProtocolError(Exception):
@@ -14,6 +18,10 @@ class ProtocolError(Exception):
 
 class TimeoutError(ProtocolError):
     """No complete record within the configured timeout."""
+
+
+class AbortRequested(ProtocolError):
+    """Operator or host requested abort of the active long transaction."""
 
 
 def _idle_success_codes_only(txn: Transaction) -> bool:
@@ -33,6 +41,10 @@ class TransactionEngine:
     """
     Serialize commands. In prompted mode, after each command send DC1 and
     read CR+LF records until Transaction.complete.
+
+    Optional ``on_record`` streams each record as it arrives (live scan UI).
+    ``request_abort()`` may interrupt scan/time-drive-like transactions by
+    sending ``$AB`` and draining until ``0099`` / ordinary completion.
     """
 
     def __init__(
@@ -50,6 +62,21 @@ class TransactionEngine:
         self._prompted_idle_s = prompted_idle_s
         self._prompted = prompted
         self._busy = False
+        self._abort_lock = threading.Lock()
+        self._abort_requested = False
+
+    def request_abort(self) -> None:
+        """Ask the active long transaction to send ``$AB`` and finish."""
+        with self._abort_lock:
+            self._abort_requested = True
+
+    def clear_abort(self) -> None:
+        with self._abort_lock:
+            self._abort_requested = False
+
+    def _abort_pending(self) -> bool:
+        with self._abort_lock:
+            return self._abort_requested
 
     def transact(
         self,
@@ -57,6 +84,8 @@ class TransactionEngine:
         *,
         idle_complete: bool = True,
         timeout_s: float | None = None,
+        on_record: OnRecordCallback | None = None,
+        allow_abort: bool = False,
     ) -> Transaction:
         """
         Run one command to completion.
@@ -65,10 +94,15 @@ class TransactionEngine:
         data ends the transaction (e.g. $ES 1). Set False for long motions
         ($GM/$SX/$SM with parameters) so the first 0000 is not mistaken for done.
         timeout_s: optional per-call override of the engine default timeout.
+        on_record: optional callback invoked after each parsed record.
+        allow_abort: if True, honor ``request_abort()`` by sending ``$AB``
+        mid-transaction (intended for ``$SC`` / ``$TD``).
         """
         if self._busy:
             raise ProtocolError("overlapping command (internal serialization fault)")
         self._busy = True
+        self.clear_abort()
+        abort_sent = False
         try:
             frame = encode_command(command)
             self._transport.write(frame)
@@ -82,6 +116,14 @@ class TransactionEngine:
                         f"timeout waiting for completion of {txn.command}; "
                         f"got {len(txn.records)} record(s)"
                     )
+
+                if allow_abort and not abort_sent and self._abort_pending():
+                    # Stop prompting for more data; inject abort.
+                    self._transport.write(encode_command("AB"))
+                    abort_sent = True
+                    # Extend deadline slightly for abort completion.
+                    deadline = max(deadline, time.monotonic() + 15.0)
+
                 if self._prompted:
                     self._transport.write(DC1)
                 # After success code(s) with no data, a short idle means the
@@ -103,9 +145,12 @@ class TransactionEngine:
                             break
                     raise
                 txn.records.append(record)
+                if on_record is not None:
+                    on_record(record, txn)
             return txn
         finally:
             self._busy = False
+            self.clear_abort()
 
     def _read_record(self, deadline: float) -> Record:
         buf = bytearray()

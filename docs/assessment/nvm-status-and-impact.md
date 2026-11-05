@@ -114,7 +114,7 @@ Identity and Stage 1 harnesses already treat `0106` as a hard error and `0108` a
 | Numeric correction / cal coefficients | **Not readable** over RS-232 |
 | Wavelength accuracy `±1.0 nm` | **Open** — needs Gate D + `$XC`/`$MC` peaks or external standards |
 | Slit optical bandpass vs. commanded nm | **Open** — positioning verified; spectral width not measured |
-| Water Raman sensitivity `500:1` | **Open** — requires holder + distilled-water method |
+| Water Raman sensitivity `500:1` | **Open** (factory) — DIY absolute-peak SNR ~`123` on the unsecured block, not `L2250140`; see [water-raman-baseline.md](water-raman-baseline.md) |
 
 ---
 

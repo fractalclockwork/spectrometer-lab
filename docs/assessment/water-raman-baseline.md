@@ -95,4 +95,5 @@ Undisturbed seats reproduce a broad residual band peaking just short of the `397
 - [ ] Prefer sealed bottled DI/distilled water; mark cuvette face/orientation.
 - [ ] Re-run a short water-Raman series after seating fix; expect tighter peak/SNR scatter.
 - [ ] Optional software: continuum-residual plot + contrast SNR `(peak − continuum) / noise` in the water-Raman runner.
+- [x] Tonic-water usefulness gate — series `20261103-194005` at ~`1:450`; see [tonic-water-baseline.md](tonic-water-baseline.md).
 - [ ] Factory `500:1` / `±1.0 nm` remain **open** until a qualified holder (or honest DIY sensitivity claim with documented geometry).

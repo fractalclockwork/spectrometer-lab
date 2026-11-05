@@ -10,7 +10,7 @@ This table correlates the published specifications and system descriptions in th
 Refresh live identity fields at any time with:
 
 ```bash
-python scripts/dump_instrument_identity.py \
+uv run python scripts/dump_instrument_identity.py \
   --port /dev/serial/by-id/<adapter> \
   --gate-a-pass --compartment-closed
 ```
@@ -115,6 +115,7 @@ These factory specifications cannot be read from RS-232 status registers and req
 
 | Parameter | Published Specification (`pp. 17–18`) | Validation Method | Status on this bench unit |
 | --- | --- | --- | --- |
-| Wavelength accuracy | `±1.0 nm` | Excitation/emission calibration peaks (`$XC`, `$MC`) or reference standards | DIY water Raman guide check only: technical mean ~`395 nm` vs `397 nm` guide (Δ ≈ `−2 nm`) on unsecured Al block — [../assessment/water-raman-baseline.md](../assessment/water-raman-baseline.md). Factory `±1.0 nm` **not** closed |
-| Wavelength reproducibility | `±0.5 nm` | Repeated peak scans | Technical σ ≈ `1.1 nm` (n=5, same seat); reseat σ ≈ `3.7 nm` — seating-limited |
+| Wavelength accuracy | `±1.0 nm` | Excitation/emission calibration peaks (`$XC`, `$MC`) or reference standards | DIY only: Raman tech Δ ≈ `−1.8 nm` (guide `397`); tonic gate Δ ≈ `−3.0 nm` (guide `450`) — [../assessment/measured-vs-specs.md](../assessment/measured-vs-specs.md). Factory `±1.0 nm` **not** closed |
+| Wavelength reproducibility | `±0.5 nm` | Repeated peak scans | Raman tech σ ≈ `1.1 nm`, reseat σ ≈ `3.7 nm`; tonic tech σ ≈ `3.1 nm`, reseat σ ≈ `7.6 nm` — seating-limited |
 | Sensitivity (Water Raman) | `500:1` RMS SNR (Ex `350 nm`, `10 nm` Ex/Em bandpass) | Distilled water scan in `L2250140` holder | DIY fixture absolute-peak SNR ~`123` (~4× below); **not** `L2250140` equivalence |
+| Fluorescence usefulness (quinine) | Em ~`450 nm` (application / Expt 1) | Tonic gate series `20261103-194005` | Peak **447 ± 5 nm** at ~`1:450`, unclipped — [../assessment/tonic-water-baseline.md](../assessment/tonic-water-baseline.md) |

@@ -44,9 +44,11 @@ Apply a consistent protocol across all five experiments (see [../software/featur
 
 ### Experiment 1: Tonic-Water Emission Spectrum and Dilution Curve
 
+> **Usefulness gate first:** Before the full dilution ladder, run the short DIY go/no-go in [tonic-water.md](tonic-water.md) (start ~`1:80`–`1:100`, dilute until unclipped — this mixer needed ~`1:450`; matched water blank, 3 technical + 3 reseat). Full `1:20`–`1:320` linearity / IFE analysis stays deferred until Gate D seating is fixed.
+
 - **Reagents:** Commercial tonic water containing quinine, distilled or deionized water.
 - **Preparation:** Degas a small portion of tonic water in a loosely covered vessel until flat so $\text{CO}_2$ bubbles do not form on cuvette walls. Prepare a distilled-water blank and a 2-fold serial dilution series (`1:20`, `1:40`, `1:80`, `1:160`, `1:320` tonic-to-total-volume, where `1:20` = 1 part tonic + 19 parts water).
-- **Acquisition:** Set excitation to **350 nm** (`5 nm` Ex/Em slits, `120 nm/min` scan speed, `2 nm` step) and scan emission from **400 to 550 nm** [2, 3]. Quinine exhibits a broad blue emission band centered near **450 nm** (check for the weak water Raman peak near `397 nm` in the water blank).
+- **Acquisition:** Set excitation to **350 nm** (`5 nm` Ex/Em slits, `120 nm/min` scan speed, `2 nm` step) and scan emission from **400 to 550 nm** [2, 3]. Quinine exhibits a broad blue emission band centered near **450 nm** (check for the weak water Raman peak near `397 nm` in the water blank). CLI path for the usefulness gate: `scripts/run_tonic_water_serial.py` / `scripts/summarize_tonic_water.py`.
 - **Analysis:** Plot blank-subtracted peak (or band-integrated) intensity vs. relative tonic concentration. Identify the low-concentration linear regime, fit a weighted line with residuals, and note the high-concentration roll-off caused by primary/secondary inner-filter absorption and pH shift upon water dilution [2, 5].
 
 ### Experiment 2: Chloride Quenching of Quinine (Stern–Volmer Series)

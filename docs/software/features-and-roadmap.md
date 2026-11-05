@@ -1,150 +1,189 @@
 # LS 55 Software Features and Roadmap
 
-October 28, 2026 | Post–bring-up software architecture and staged feature build order
+November 3, 2026 | FL WinLab–aligned operator workflows, web console, and extensible hardware architecture
 
-With hardware bring-up and RS-232 verification complete ([../assessment/bringup-report.md](../assessment/bringup-report.md)), this guide defines the software features worth building in Python to replace legacy **FL WinLab** workflows. Features are **staged by usefulness** for this bench LS 55 and the five home-lab experiments in [../experiments/fluorescence-home-lab.md](../experiments/fluorescence-home-lab.md)—not by WinLab chapter order. For hardware specifications and known device constraints, see [../reference/instrument-specs.md](../reference/instrument-specs.md) and [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md).
+With hardware bring-up and RS-232 verification complete ([../assessment/bringup-report.md](../assessment/bringup-report.md)), this guide defines software features that replace legacy **FL WinLab** while keeping the operator’s **instrument status awareness** and **measurement staging** first. Features follow WinLab’s application model, then extend beyond factory `$AF` accessories for custom optics and motion. For hardware specs and device constraints, see [../reference/instrument-specs.md](../reference/instrument-specs.md) and [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md).
 
 ---
 
-## 1. Staged Priorities (most useful first)
+## 1. Design Philosophy
 
-Build **Software Stage 1** before analysis modules. Later stages assume Gate D holder readiness where liquid samples are required.
+An instrument console is a **cockpit for the operator at the bench**:
+
+0. **Stay connected safely (Stage 0)** — truthful adapter/DUT link across power and USB cycles; never claim ready while busy/booting; Xe OFF after every connection loss; recover faults without a host restart.
+1. **See device state** — commanded setpoints vs verified hardware readbacks; shutter (`$ES`); faults (`$PT 0107`, `$ME`, busy `0110`).
+2. **Stage measurements safely** — optical setup → blank pairing → optional Single-Read scout (clip check) → dark/sample scan with live progress and `$AB` abort → guaranteed `$ES 1` idle.
+3. **Inspect spectra interactively** — blank swap, wing-baseline continuum residual, dual SNR, without mutating raw counts.
+
+Automation and scripts may use the same service API; the operator retains arming, gate sign-off, and abort authority.
+
+Tags: **`[S]`** = software over RS-232 · **`[H]`** = needs accessory/extension · **`[R]`** = needs optical reference · **`[X]`** = out of scope unless custom hardware appears.
+
+---
+
+## 2. Staged Priorities
 
 | Stage | Focus | Unlocks |
 | --- | --- | --- |
-| **1 — Core acquire + provenance** | Scan, blank/$N$-average, JSON sidecar, Status snapshot, Single Read | Every experiment’s raw workflow |
-| **2 — Quantitation, validation, kinetics** | Validation, Concentration, standard addition, TimeDrive, Wavelength Program, Data Calculator | Expts **1**, **2**, **4** |
-| **3 — Mixtures and advanced optics** | Sync scan, EEM, emission correction/Φ, Autopol, phosphorescence | Expts **3**, **5**; publishable shapes; polarizers fitted |
-| **4 — Deferred accessories** | Plate/TLC/FFA/sipper/ICBC/Ratio/enzyme/WPR | Not on this DUT (`$AF`); mark `[X]`/`[H]` |
+| **0 — Robust bootup / connection** | USB by-id discovery; boot silence & busy `0110`; Probe vs Connect; Xe unverified until `$ES`; **kill Xe after any link loss**; heartbeat; fault recovery | Safe host ↔ DUT relationship before any measurement UI |
+| **1 — Operator console + provenance** | Status/Setup synoptic, Single Read scout, Scan with live stream/`$AB`, Methods/sidecar, Viewing/Data Calculator (blank, wing residual, SNR), web dashboard | Every experiment’s raw workflow (**requires Stage 0**) |
+| **2 — Quantitation, validation, kinetics** | Validation, Concentration, standard addition, TimeDrive, Wavelength Program | Expts **1**, **2**, **4** |
+| **3 — Mixtures and advanced optics** | Sync scan, EEM, emission correction/Φ, Autopol, phosphorescence | Expts **3**, **5**; polarizers fitted |
+| **4+ — Custom hardware & optical extensions** | 2-window transmission mirror, UV fiber, stirrer, autosampler, gantry, lasers, ns spark-gap | Beyond factory `$AF` |
 
-Tags used below: **`[S]`** = pure software over RS-232 · **`[H]`** = needs accessory · **`[R]`** = needs optical reference · **`[X]`** = out of scope on this bench unit.
-
----
-
-## 2. How Hardware Architecture Shapes Software Design
-
-Full parameter bounds are tabulated in [../reference/instrument-specs.md](../reference/instrument-specs.md); measurement constraints are summarized in [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md) §6. Key implications for software:
-
-- **Flash block-averaging vs. scan speed:** The pulsed xenon source fires at mains frequency (`60 Hz` on this bench unit per `$HZ`). Slower scan speeds (`$SS 10–1500 nm/min`) average more flashes per wavelength step (e.g., ~50 flashes/point at 30 nm/min vs. 1 flash/point at 1500 nm/min), trading acquisition time directly for signal-to-noise ratio.
-- **12-bit auto-ranging ADC and overload handling:** Dark current is subtracted digitally each cycle, and the output in fluorescence mode (`$PH 0`) is the sample-to-reference ratio. When a peak saturates (`999999` in ASCII scan data or `$PT` returning `0107`), the software must flag the scan as clipped and prompt for narrower slits (`$SX`, `$SM`) or lower PMT voltage (`$PV`).
-- **Excitation shutter management (`$ES`):** To minimize photobleaching (especially in riboflavin and biological samples) and xenon lamp wear, acquisition wrappers should open the shutter (`$ES 0`) immediately before a scan and close it (`$ES 1` with readback verification) in a `finally` block.
-- **Fitted polarizers (`$AF`):** Because excitation and emission polarizer wheels are installed on this bench unit, Stage 3 can automate fluorescence anisotropy / polarization via `$PX` and `$PM`. Temperature sensor is **not** fitted (`$TP` → `0100`); log an external probe in the sidecar when needed.
+**Stage 0 is first.** WinLab-shaped Status/Scan (Stage 1) assumes the link layer already survives power cycles, USB unplug/replug, busy-at-power-on, and lamp-safe recovery. Do not treat dashboard polish as a substitute for Stage 0.
 
 ---
 
-## 3. Spectral Correction Architecture
+## 3. How Hardware Architecture Shapes Software Design
 
-Per the User's Guide (*Optical System* and *Ratioing and Correction*, pp. 166–171; see [../vendor/README.md](../vendor/README.md)):
+Full bounds: [../reference/instrument-specs.md](../reference/instrument-specs.md); limits: [../issues/known-issues-and-limitations.md](../issues/known-issues-and-limitations.md) §6.
 
-- **Excitation correction (in firmware):** The reference photodiode response is multiplied by a stored rhodamine quantum-counter curve (`230–630 nm`). `$CX 1` (power-on default) enables this correction; `$CR` regenerates the table when a rhodamine standard is installed. Scans return `0111` if `$CX 1` is active without a valid table.
-- **Emission correction (host software feature, Stage 3):** Grating efficiency and PMT sensitivity (modified S5 roll-off near 650 nm, or R928 to 900 nm) vary strongly with wavelength. FL WinLab does not replace a host emission curve. To build one:
-  - Measure a NIST SRM 2940-series fluorescence glass standard, a calibrated tungsten-halogen source with a diffuse reflector, or a reference fluorophore with a published corrected spectrum.
-  - Store the correction vector indexed by wavelength, slit width, and PMT voltage, and apply it in post-processing only when explicitly requested.
+- **Flash block-averaging vs. scan speed:** Xe fires at mains (`$HZ` = `60` on this DUT). Slower `$SS` averages more flashes per step.
+- **12-bit ADC / overload:** Flag `999999` clip and `$PT` `0107`; prompt for narrower slits or lower `$PV`. Prefer a Single-Read scout before long scans.
+- **Excitation shutter (`$ES`):** Open (`0`) only during acquire; close (`1`) with readback in `finally`. Idle resting state is OFF.
+- **Fitted polarizers (`$AF`):** Excitation and emission polarizers present; temperature controller not fitted (`$TP` → `0100`).
 
 ---
 
-## 4. FL WinLab Application Map → Python Modules
+## 4. Spectral Correction Architecture
 
-Application inventory follows the **FL WinLab Software User’s Guide** (part **0993-4316**, Release A, March 1999 — WinLab 3.0 / LS-50B-family software book) chapters 3 and 5–17, cross-checked against the LS 55 brochure Applications menu and plug-ins ([1–2]). The LS 55–bundled WinLab PDF is not in this repo; the same application surface applies, with accessory modules gated by hardware.
+- **Excitation correction (firmware):** Rhodamine table via `$CX 1` (default); `$CR` regenerates. Scans return `0111` if `$CX 1` without a valid table.
+- **Emission correction (host, Stage 3):** Host curve from SRM glass / calibrated source / published reference spectrum; apply only when requested.
+- **In-situ absorbance (Stage 4+, 2-window + fold mirror):** Synchronous $\Delta\lambda = 0$ yields $T = I/I_0$ and $A = -\log_{10}(I/I_0)$ for IFE inputs.
+
+---
+
+## 5. FL WinLab Application Map → Python Modules
+
+Inventory from **FL WinLab Software User’s Guide** (part **0993-4316**, Release A, March 1999) chs. 3, 5–17 and the LS 55 brochure Applications menu.
 
 | Guide | FL WinLab application | Purpose | `spectrometer-lab` approach | Stage | Tag |
 | --- | --- | --- | --- | ---: | --- |
-| ch.3 | **Status / Setup** | Live optical path, slits, filters, accessories | Status snapshot into sidecar (`$ST`, `$AF`, `$PV`, `$CX`, `$FW`); reuse identity parsers | 1 | `[S]` |
-| ch.4–6 | **Methods / Viewing / Data Handling** | GLP methods, peak labels, calculator, smooth, report, 3D view | JSON sidecar + CSV/PNG (§6); Stage 2 Data Calculator subset | 1–2 | `[S]` |
-| ch.7 | **Single Read** | Fixed-λ intensity (polarization / anisotropy options) | `$RD` wrapper at fixed `$GM` | 1 | `[S]` |
-| ch.8 | **Scan** | Ex / Em / sync / accumulation; fluor / phos / bio | Generalize [`ls55/freepath.py`](../../ls55/freepath.py) / [`ls55/scan.py`](../../ls55/scan.py); `$ES` in `finally` | 1 (Ex/Em, $N$-avg); 3 (sync) | `[S]` |
-| ch.9 | **TimeDrive** | Intensity vs time at fixed λ | `$TD` / `$RT` or timed `$RD`; shutter-aware | 2 | `[S]` |
-| ch.10 | **Wavelength Program** | Multi-λ (and multi-cell) program | `$GM` + `$RD` sequence (single cell on this DUT) | 2 | `[S]` |
-| ch.12 | **Concentration** | Quantitation / curve fit | Weighted linear fit, residuals, LOD/LOQ; IFE flags | 2 | `[S]` |
-| — | **Standard addition** | Spike unknowns (Concentration-adjacent; not a separate 1999 chapter) | Analysis script for tonic matrix | 2 | `[S]` |
-| ch.17 | **Validation** | SNR + wavelength accuracy report | Water Raman script (Ex `350 nm`, Em `380–420 nm`, `10 nm` slits) after Gate D | 2 | `[S]` |
-| ch.8 / 3D | **Synchronous + EEM** | Constant $\Delta\lambda$/$\Delta\nu$; stacked Em scans | `$MX`/`$MQ`; Em loop + Rayleigh/Raman mask | 3 | `[S]` |
-| — | **Emission correction & relative Φ** | True spectral shape / quantum yield | Host curve + slope method vs quinine sulfate | 3 | `[R]` |
-| Brochure | **Autopol** | Intensity / polarization / anisotropy vs temperature | `$PX`/`$PM` (wheels fitted); external temp in metadata | 3 | `[S]`/`[H]` |
-| Brochure / Scan | **Short phosphorescence decay** | ms gated decay | `$PH 1`, `$PD`/`$PG`/`$PF`, `$DP` when needed | 3 | `[S]` |
-| ch.11 | **ICBC Calibration** | Intracellular ion post-process | Deferred — needs Ratio/FFA/biokinetics workflow | 4 | `[X]` |
-| ch.13 | **TLC Scan** | Flat-sample 2D/3D via plate reader | Not fitted | 4 | `[X]` |
-| ch.14 | **Plate Reader** | Microplate end-point / kinetics | Not fitted (`$AF`) | 4 | `[X]` |
-| ch.15 | **Fast Filter** | Rapid multi-channel via FFA | Not fitted | 4 | `[X]` |
-| ch.16 | **Ratio Data** | Intracellular True/Quick Ratio | Not fitted; optional later: software two-λ ratio from two TimeDrives (not WinLab Ratio) | 4 | `[X]` |
-| Brochure | **Enzyme activity / WPR Scan** | Niche plug-ins | Skip unless accessory + use case appear | 4 | `[X]` |
-| Brochure | **Sipper / autosampler paths** | Concentration automation | Not fitted | 4 | `[X]` |
+| ch.3 | **Status / Setup** | Live optical path, slits, filters | `ls55/control.py` setpoint vs readback; dashboard synoptic | 1 | `[S]` |
+| ch.4 | **Methods** | GLP method load/save | Method JSON + run sidecar (`ls55/sidecar.py`) | 1 | `[S]` |
+| ch.5–6 | **Viewing / Data Calculator** | Peaks, blank, baseline, report | `ls55/review.py` + Plotly ROI (blank swap, wing residual, dual SNR) | 1 | `[S]` |
+| ch.7 | **Single Read** | Fixed-λ intensity / scout | `run_single_read` (`$RD`) with `$ES` safety | 1 | `[S]` |
+| ch.8 | **Scan** | Ex / Em / sync / accumulation | `ls55/acquire.py`; live `on_record`; `$AB` | 1 (Ex/Em, $N$-avg); 3 (sync) | `[S]` |
+| ch.9 | **TimeDrive** | Intensity vs time | `$TD` / timed `$RD` | 2 | `[S]` |
+| ch.10 | **Wavelength Program** | Multi-λ sequence | `$GM` + `$RD` | 2 | `[S]` |
+| ch.12 | **Concentration** | Quantitation / curve fit | Weighted fit, LOD/LOQ, IFE flags | 2 | `[S]` |
+| — | **Standard addition** | Spike unknowns | Analysis on tonic matrix | 2 | `[S]` |
+| ch.17 | **Validation** | SNR + wavelength accuracy | Water Raman method after Gate D | 2 | `[S]` |
+| ch.8 / 3D | **Synchronous + EEM** | Constant $\Delta\lambda$/$\Delta\nu$; stacks | `$MX`/`$MQ`; Rayleigh/Raman mask | 3 | `[S]` |
+| — | **Emission correction & relative Φ** | True shape / quantum yield | Host curve + slope vs quinine | 3 | `[R]` |
+| Brochure | **Autopol** | Polarization / anisotropy | `$PX`/`$PM` (fitted) | 3 | `[S]`/`[H]` |
+| Brochure | **Short phosphorescence decay** | ms gated decay | `$PH 1`, `$PD`/`$PG`/`$PF`, `$DP` | 3 | `[S]` |
+| ch.13–16 / Brochure | **Plate / TLC / FFA / Ratio / Sipper** | Factory accessories | Replaced by Stage 4+ custom extensions (not grayed-out forever) | 4+ | `[H]` |
 
 ---
 
-## 5. Analytical Best Practices to Encode in Software
+## 6. Analytical Best Practices to Encode
 
-Encode these in Stage 1–2 pipelines (see also experiment protocols):
-
-- **Blank subtraction and water Raman awareness:** Subtract a matched-cuvette solvent blank acquired with identical slits, speed, and PMT voltage. In aqueous samples excited at `350 nm`, the water O–H stretch Raman band ($\sim 3400\text{ cm}^{-1}$ shift) appears near **397 nm**—blank subtraction removes it and prevents misidentifying Raman scatter as sample emission.
-- **Independent replicates:** Distinguish between technical scan repeats on one fill and $\ge 3$ independent sample preparations.
-- **Inner-filter effect (IFE) flagging:** When sample absorbance exceeds $0.05\text{–}0.10$ in a $10\text{ mm}$ cell, primary attenuation of the excitation beam and secondary reabsorption of emission distort linearity. Where $A_{\text{ex}}$ and $A_{\text{em}}$ are known (and moderate), apply the standard geometry approximation:
-  \[
-  F_{\text{corr}} \approx F_{\text{obs}} \times 10^{(A_{\text{ex}} + A_{\text{em}}) / 2}
-  \]
-- **Relative quantum yield ($\Phi_x$):** Compare integrated, emission-corrected spectra across a dilution series ($A < 0.1$) against a reference standard such as quinine sulfate in $0.1\text{ M }\text{HClO}_4$ ($\Phi_{\text{ref}} \approx 0.60$) or $0.1\text{ M }\text{H}_2\text{SO}_4$ ($\Phi_{\text{ref}} \approx 0.54\text{–}0.55$):
-  \[
-  \Phi_x = \Phi_{\text{ref}} \left(\frac{\text{slope}_x}{\text{slope}_{\text{ref}}}\right) \left(\frac{n_x^2}{n_{\text{ref}}^2}\right)
-  \]
-- **Stern–Volmer quenching:** Fit $F_0 / F = 1 + K_{\text{SV}}[Q]$ (or the combined static/dynamic form $(1 + K_D[Q])(1 + K_S[Q])$ when upward curvature occurs), correcting for dilution and IFE — Stage 2 analysis on top of Scan / Single Read (Expt 2).
+- **Blank subtraction / water Raman:** Matched solvent blank; O–H Raman near **397 nm** at Ex `350 nm`.
+- **Replicates:** Technical vs reseat (`replicate_kind`); ≥3 independent preparations where claimed.
+- **IFE:** Flag $A > 0.05$–$0.10$ in 10 mm path; $F_{\text{corr}} \approx F_{\text{obs}} \times 10^{(A_{\text{ex}}+A_{\text{em}})/2}$ when $A$ known.
+- **Relative Φ / Stern–Volmer:** Stage 2–3 analysis on Scan / Single Read series.
 
 ---
 
-## 6. Standard Data Record (JSON Sidecar Schema)
+## 7. Standard Data Record (JSON Sidecar Schema)
 
-Every Stage 1+ acquisition script should emit a paired `.json` metadata file alongside `.csv` and `.png` outputs containing:
+Every Stage 1+ acquisition emits paired `.json` + `.csv` + `.png`:
 
-- **Provenance:** UTC timestamp, operator, git commit hash, script name, instrument model (`55`), firmware (`F1`), serial (from `$SN`).
-- **Optical & electronic settings:** Mode (`$PH`), excitation/emission wavelengths (`$GM` / `$AL` / `$AH`), slits (`$SX`, `$SM`), scan speed (`$SS`), step interval (`$SI`), filter wheel (`$FW`), polarizer positions (`$PX`, `$PM`), PMT voltage (`$PV`), excitation correction (`$CX`), phosphorescence delay/gate/flashes (`$PD`, `$PG`, `$PF`).
-- **Sample & cell metadata:** Sample ID, solvent, concentration/dilution factor, cuvette material and path length, holder ID, ambient or external probe temperature, optional $A_{\text{ex}}$ and $A_{\text{em}}$.
-- **Processing & integrity:** Reference to blank file, applied corrections (blank subtraction, IFE, emission curve), SHA-256 hash of raw log, and any warning/status codes (`0107` overload, Class B repairs — see [../issues/serial-link-glitch-taxonomy.md](../issues/serial-link-glitch-taxonomy.md)).
+- **`provenance`:** UTC, operator, git commit, method/script name, model `55`, firmware `F1`, `$SN`.
+- **`ls55_optics`:** `$PH`, `$GM`/`$AL`/`$AH`, `$SX`/`$SM`, `$SS`/`$SI`, `$FW`, `$PX`/`$PM`, `$PV`, `$CX`, `$PD`/`$PG`/`$PF`.
+- **`optical_path_config`:** `right_angle_4w` | `transmission_2w_mirror` | `uv_fiber_probe` | `free_path`; holder/cuvette/fiber metadata.
+- **`excitation_source_config`:** `internal_xe` | `external_laser` | `ns_spark_gap` (+ interlock/trigger notes).
+- **`auxiliary_state`:** stirrer / autosampler / gantry when present.
+- **`sample`:** ID, solvent, dilution, temperature.
+- **`review_analysis`:** blank path, peak/noise/wing windows, peaks, absolute + contrast SNR, clip/`0107` flags, raw-log SHA-256.
 
 ---
 
-## 7. Recommended Build Order (Software Stages 1–4)
+## 8. Recommended Build Order
 
-### Stage 1 — Core acquire + provenance
+### Stage 0 — Robust bootup / connection (**PASS — 2026-11-03**)
 
-Unlocks blank/replicate workflow for **all** [home-lab experiments](../experiments/fluorescence-home-lab.md).
+**Prerequisite for Stage 1.** Checklist: [stage0-operator-signoff.md](stage0-operator-signoff.md). Offline tests are not sign-off.
 
-1. **General Scan CLI** (WinLab Scan ch.8) — configurable Ex and Em scans; generalize beyond freepath; `$ES 0` before acquire, `$ES 1` in `finally`.
-2. **JSON sidecar + CSV/PNG** (methods / viewing ch.4–6) — §6 schema on every run.
-3. **Blank subtraction + $N$-accumulation** (Scan accumulation + Data Handling) — store raw, blank, blank-subtracted; per-λ mean and SD.
-4. **Status snapshot helper** (Status ch.3) — `$ST` / `$AF` / `$PV` / `$CX` / `$FW` into sidecar.
-5. **Single Read** (ch.7) — `$RD` at fixed Ex/Em for quick peak checks.
+1. **Adapter truth** — enumerate USB–RS232 via `/dev/serial/by-id` only; exclusive open; release on disconnect/loss.
+2. **Boot / busy classify** — poll `$ST` through power-on silence; report busy `0110` without touching `$ES`; Probe = read-only classify; Connect = safe-idle when ready.
+3. **Xe lamp policy** — badge unverified until confirmed `$ES`; resting OFF on Connect; **`kill_xe` / `$ES 1` after any connection loss** (pending until verified).
+4. **Link loss & fault recovery** — heartbeat → drop dead fd; Abort/Refresh recover FAULT with `$AB` + Xe OFF; ephemeral Abort when disconnected.
+5. **Operator cues** — link badge (unplugged / silent / busy / booting / ready / Xe kill pending); CLIs `kill_xe.py`, `discover_device.py`.
+
+Library layout: `ls55/discover.py`, `ls55/source.py`, `ls55/transactions.py`, `ls55/transport.py`, `ls55/service.py` (link + Xe policy), `scripts/kill_xe.py`, `scripts/discover_device.py`.
+
+### Stage 1 — Operator console + provenance (**OPEN — awaiting operator sign-off**)
+
+Implementation may be present in-tree, but **Stage 1 features are not complete until signed off**, and **Stage 0 must be PASS (or waived) first**. Checklist: [stage1-operator-signoff.md](stage1-operator-signoff.md). Offline tests are not sign-off.
+
+1. **Status / Setup** — snapshot + apply optical state; setpoint vs readback.
+2. **Single Read** — `$RD` scout with dynamic-range / clip gauge.
+3. **Scan** — generalize freepath; live streaming; `$AB`; `$ES` in `finally`.
+4. **Methods + sidecar** — §7 schema on every run.
+5. **Viewing / Data Calculator** — blank swap, wing continuum residual, dual SNR.
+6. **Web dashboard** — FastAPI + WebSocket + Plotly; WinLab-aligned tabs **Setup / Acquire / Results** (Connect→Optics→Blank under Setup; Scout/Scan under Acquire; run browser + Data Calculator under Results). Connect **defers** to Stage 0 link behavior. Fixed health strip + setpoint/readback synoptic on every tab.
+
+Library layout: `ls55/control.py`, `ls55/acquire.py`, `ls55/review.py`, `ls55/sidecar.py`, `ls55/service.py`, `ls55/web/`.
 
 ### Stage 2 — Quantitation, validation, kinetics
 
-1. **Validation / water Raman** (ch.17) — SNR + peak-position tracker after Gate D holder (routine health; supports Expt 1 blank awareness).
-2. **Concentration / calibration** (ch.12) — weighted fit, residual plot, LOD/LOQ, IFE warnings → **Expt 1**.
-3. **Standard-addition analysis** — Concentration-adjacent script for tonic matrix → **Expt 1/2**.
-4. **Stern–Volmer module** — $F_0/F$ regression with dilution/IFE correction → **Expt 2**.
-5. **TimeDrive** (ch.9) — `$TD` / timed `$RD`, shutter-aware photobleaching → **Expt 4**.
-6. **Wavelength Program** (ch.10) — discrete λ list via `$GM`+`$RD` without full scans.
-7. **Data Calculator basics** (ch.6) — smooth, peak pick, export for lab plots.
+1. Validation / water Raman health tracker (after Gate D).
+2. Concentration / calibration + IFE warnings → Expt 1.
+3. Standard addition; Stern–Volmer → Expt 2.
+4. TimeDrive; Wavelength Program; Data Calculator exports.
 
 ### Stage 3 — Mixtures and advanced optics
 
-1. **Synchronous Scan** (Scan sync) — `$MX` / `$MQ`; mixture band narrowing → **Expt 5**.
-2. **EEM builder + scatter mask** (3D / multi-scan) — stepped Ex, Em stacks; Rayleigh/Raman masks → **Expt 3/5** unmixing input.
-3. **Host emission correction + relative Φ** `[R]` — once a reference standard or calibrated source is available.
-4. **Autopol / anisotropy** — `$PX` / `$PM` on fitted wheels; after Expts 1–5 unless binding work jumps the queue.
-5. **Phosphorescence / short decay** — `$PH 1` / `$DP` when a phosphorescent sample appears.
+1. Synchronous Scan; EEM + scatter mask → Expts 3/5.
+2. Host emission correction + relative Φ `[R]`.
+3. Autopol (`$PX`/`$PM`); phosphorescence when needed.
 
-### Stage 4 — Deferred / not on this DUT
+### Stage 4+ — Custom hardware & optical extensions
 
-Do **not** schedule implementation until hardware appears:
+Treat the LS 55 as the **spectrometer core** (monochromators + PMT + compartment bench) coordinated with open-hardware plugins (`ExtensionRegistry` on `LS55Service`):
 
-- Plate Reader, TLC Scan, Fast Filter, Sipper/autosampler Concentration paths, ICBC, Ratio Data (True/Quick), Enzyme-activity plug-in, WPR Scan — `[X]` / unfitted `[H]`.
-- Optional substitute (document only): software two-λ ratio from two TimeDrives — **not** the WinLab Ratio application.
+| Extension | Role | Integration notes |
+| --- | --- | --- |
+| **2-window + fold mirror** | In-compartment $T(\lambda)$, $A(\lambda)$ | $\Delta\lambda=0$ sync / stepped equal λ; `$FW` `1% T` if needed; IFE inputs |
+| **UV fiber probe** | Remote launch/collect | Square-bore block ports; see [../assessment/ls55-uv-fiber-assessment.md](../assessment/ls55-uv-fiber-assessment.md) |
+| **Stirrer** | Mix / settle before acquire | `pre_acquire` hooks (`stir_rpm`, `mix_s`, `settle_s`) |
+| **Autosampler / sipper** | Vial or flow indexing | USB/serial or rear 15-pin / remote-start |
+| **XY/XYZ gantry** | Plate / TLC / spatial maps | Replaces WinLab Ch. 13–14; G-code/GRBL |
+| **CW / modulated laser** | External excitation | `$PH 2` + `$ES 1` + door interlock |
+| **ns spark-gap + digitizer** | Lifetime $I(t)$ | LS 55 selects λ; external HV + scope/TDC |
+
+Factory WinLab accessories that are unfitted on this DUT are **not** permanently `[X]`—they map onto these custom paths when built.
+
+---
+
+## 9. Operator Measurement Staging (Stage 1 UI)
+
+Console chrome is always visible (Stage 0 health, Xe OFF / Abort / Probe, optical synoptic). Work happens in three tabs (FL WinLab Status/Setup · Scan · Viewing):
+
+| Tab | Staging content |
+| --- | --- |
+| **Setup** | Connect & safe-idle (Stage 0); method/optics; sample meta; acquire matched blank |
+| **Acquire** | Scout `$RD` + gauge; staged scan; live Plotly stream |
+| **Results** | Run browser + blank swap; Data Calculator ROI/SNR/residual |
+
+Five-step flow maps onto those tabs (not one scrolling column):
+
+1. **Connect & safe-idle (Stage 0)** — adapter/DUT classify; busy/boot honesty; discover; `$ME`; force `$ES 1`; kill Xe after link loss. *(Setup)*
+2. **Stage method & optics** — preset or custom; apply `$GM`/`$SX`/`$SM`/`$FW` with shutter OFF; preview duration. *(Setup)*
+3. **Stage blank** — pick matched Blank CSV (Results) or acquire blank now (Setup); settings match badge.
+4. **Scout & readiness** — door/sample gates; optional `$RD` at guide λ with `0`–`999999` gauge. *(Acquire)*
+5. **Execute** — dark → sample stream → restore `$ES 1`; step `sanity` / `technical` / `reseat`; auto-open Results. *(Acquire → Results)*
 
 ---
 
 ## Sources
 
-1. PerkinElmer LS 55 User's Guide, part 09934436, release C, March 2007 — obtain locally per [../vendor/README.md](../vendor/README.md).
-2. **FL WinLab Software User’s Guide**, Perkin-Elmer part **0993-4316**, Release A, March 1999 (WinLab 3.0 online-help book / LS-50B-family). Used here as the application inventory (chs. 3, 5–17) when the LS 55–bundled WinLab PDF is not in-repo. Mirror commonly indexed as the “FL WinLab software User’s Guide” on documentation aggregators.
-3. PerkinElmer LS 45 / LS 55 Fluorescence Spectrometers brochure (Applications menu, Autopol, short phosphorescence decay, enzyme, WPR Scan, 3D) — https://www.laboratory-equipment.com/media/asset-library/l/s/ls-55ls_45_fluorescence_spectrometer_perkinelmer.pdf
-4. Iowa State University Chemical Instrumentation Facility, *LS 55 Training Manual* — https://www.cif.iastate.edu/files/inline-files/LS%2055%20Training%20Manual.pdf
-5. University of Washington Chemistry, *Perkin Elmer LS-55* overview — https://chem.washington.edu/instruments/perkin-elmer-ls-55
-6. Home-lab experiment sequence — [../experiments/fluorescence-home-lab.md](../experiments/fluorescence-home-lab.md).
+1. PerkinElmer LS 55 User's Guide, part 09934436, release C, March 2007 — [../vendor/README.md](../vendor/README.md).
+2. **FL WinLab Software User’s Guide**, Perkin-Elmer part **0993-4316**, Release A, March 1999.
+3. PerkinElmer LS 45 / LS 55 brochure — https://www.laboratory-equipment.com/media/asset-library/l/s/ls-55ls_45_fluorescence_spectrometer_perkinelmer.pdf
+4. Iowa State CIF *LS 55 Training Manual* — https://www.cif.iastate.edu/files/inline-files/LS%2055%20Training%20Manual.pdf
+5. UW Chemistry *Perkin Elmer LS-55* — https://chem.washington.edu/instruments/perkin-elmer-ls-55
+6. Home-lab experiments — [../experiments/fluorescence-home-lab.md](../experiments/fluorescence-home-lab.md).

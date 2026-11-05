@@ -32,7 +32,7 @@ class SerialTransport:
             import serial
         except ImportError as exc:  # pragma: no cover
             raise ImportError(
-                "pyserial is required for live Stage-1 runs; pip install -r requirements.txt"
+                "pyserial is required for live Stage-1 runs; run `uv sync --all-groups`"
             ) from exc
 
         self.baudrate = baudrate

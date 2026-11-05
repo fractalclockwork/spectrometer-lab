@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LS 55 Operator Console</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">LS 55</div>
+    <div id="health" class="health" data-level="idle" title="Stage 0 device health">
+      <span id="slot-usb" class="slot idle">USB --</span>
+      <span id="slot-dut" class="slot idle">DUT --</span>
+      <span id="slot-xe" class="slot idle">Xe ?</span>
+    </div>
+    <div id="top-actions">
+      <button id="btn-xe-off" class="danger" type="button" title="Force excitation shutter OFF ($ES 1)">Xe OFF</button>
+      <button id="btn-abort" class="secondary" type="button" title="Abort active job ($AB)">Abort</button>
+      <button id="btn-refresh" class="secondary" type="button" title="Probe link / refresh status">Probe</button>
+    </div>
+    <div id="health-meta">
+      <span id="badge-session" class="chip idle">sess —</span>
+      <span id="badge-id" class="chip idle">id —</span>
+      <span id="badge-clip" class="chip idle">clip ok</span>
+      <span id="health-detail" class="health-detail">Nominal: DUT on · USB up · Xe OFF</span>
+    </div>
+  </header>
+
+  <div id="synoptic" class="synoptic" title="Setpoint vs instrument readback">
+    <div class="syn-node" id="syn-src">
+      <span class="syn-label">Src</span>
+      <span class="syn-val" id="syn-src-val">Xe ?</span>
+    </div>
+    <span class="syn-arrow" aria-hidden="true">→</span>
+    <div class="syn-node" id="syn-ex">
+      <span class="syn-label">Ex</span>
+      <span class="syn-val" id="syn-ex-val">— / —</span>
+      <span class="syn-sub" id="syn-ex-slit">slit —</span>
+    </div>
+    <span class="syn-arrow" aria-hidden="true">→</span>
+    <div class="syn-node" id="syn-em">
+      <span class="syn-label">Em</span>
+      <span class="syn-val" id="syn-em-val">— / —</span>
+      <span class="syn-sub" id="syn-em-slit">slit —</span>
+    </div>
+    <span class="syn-arrow" aria-hidden="true">→</span>
+    <div class="syn-node" id="syn-det">
+      <span class="syn-label">Det</span>
+      <span class="syn-val" id="syn-det-val">ME —</span>
+    </div>
+  </div>
+
+  <nav id="mode-tabs" class="mode-tabs" role="tablist" aria-label="Console mode">
+    <button type="button" class="mode-tab active" data-mode="setup" role="tab" aria-selected="true">Setup</button>
+    <button type="button" class="mode-tab" data-mode="acquire" role="tab" aria-selected="false">Acquire</button>
+    <button type="button" class="mode-tab" data-mode="results" role="tab" aria-selected="false">Results</button>
+  </nav>
+
+  <div id="error-banner" class="error-banner" hidden></div>
+
+  <main id="workspace" data-mode="setup">
+    <aside id="rail">
+      <!-- SETUP -->
+      <div class="tab-panel" data-for="setup">
+        <section class="step" data-step="1">
+          <div class="title">Connect &amp; Safe-Idle</div>
+          <div class="field">
+            <label for="source-mode">Source</label>
+            <select id="source-mode">
+              <option value="live">Live serial port</option>
+              <option value="fixture">Offline fixture (DUT off)</option>
+            </select>
+          </div>
+          <div class="field" id="port-field">
+            <label for="port">Serial port</label>
+            <select id="port"></select>
+          </div>
+          <div class="field" id="fixture-field" hidden>
+            <label for="fixture">Offline fixture</label>
+            <select id="fixture"></select>
+          </div>
+          <label class="check"><input type="checkbox" id="gate-a" /> Gate A pass</label>
+          <label class="check"><input type="checkbox" id="compartment" /> Compartment closed</label>
+          <label class="check"><input type="checkbox" id="clear-busy" /> Clear busy ($AB) if 0110</label>
+          <p class="hint">DUT power / USB may come and go. Health targets DUT on · USB up · Xe OFF.</p>
+          <div class="row">
+            <button id="btn-connect" type="button">Connect</button>
+            <button id="btn-disconnect" class="secondary" type="button">Disconnect</button>
+          </div>
+        </section>
+
+        <section class="step" data-step="2">
+          <div class="title">Method &amp; Optics</div>
+          <div class="field">
+            <label for="preset">Preset</label>
+            <select id="preset">
+              <option value="custom">Custom</option>
+              <option value="freepath">Freepath</option>
+              <option value="water-raman">Water Raman</option>
+              <option value="tonic">Tonic Quinine</option>
+              <option value="riboflavin">Riboflavin</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="field"><label>Ex nm</label><input id="ex" type="number" step="0.1" value="350" /></div>
+            <div class="field"><label>Em lo</label><input id="em-lo" type="number" step="0.1" value="400" /></div>
+            <div class="field"><label>Em hi</label><input id="em-hi" type="number" step="0.1" value="550" /></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Ex slit</label><input id="sx" type="number" step="0.1" value="5" /></div>
+            <div class="field"><label>Em slit</label><input id="sm" type="number" step="0.1" value="5" /></div>
+            <div class="field"><label>Speed</label><input id="ss" type="number" step="1" value="120" /></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>Step nm</label><input id="si" type="number" step="0.1" value="2" /></div>
+            <div class="field"><label>Guide nm</label><input id="guide" type="number" step="0.1" value="450" /></div>
+          </div>
+          <p id="duration-hint" class="hint"></p>
+          <button id="btn-setup" class="secondary" type="button">Apply Setup (Xe OFF)</button>
+        </section>
+
+        <section class="step" data-step="3">
+          <div class="title">Blank &amp; Sample</div>
+          <div class="field">
+            <label for="geometry">Optical path</label>
+            <select id="geometry">
+              <option value="right_angle_4w">90° 4-window</option>
+              <option value="transmission_2w_mirror">180° 2-window + mirror</option>
+              <option value="uv_fiber_probe">UV fiber probe</option>
+              <option value="free_path">Free path / empty</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="field"><label>Sample ID</label><input id="sample-id" type="text" placeholder="tonic-1" /></div>
+            <div class="field"><label>Dilution</label><input id="dilution" type="text" placeholder="1:450" /></div>
+          </div>
+          <div id="blank-match" class="metrics">No blank selected</div>
+          <button id="btn-blank" class="secondary" type="button">Acquire Matched Blank Now</button>
+          <p class="hint">Pick / swap blank CSV on Results. Acquire here writes a matched blank.</p>
+        </section>
+      </div>
+
+      <!-- ACQUIRE -->
+      <div class="tab-panel" data-for="acquire" hidden>
+        <section class="step" data-step="4">
+          <div class="title">Scout</div>
+          <div class="field">
+            <label for="replicate">Replicate kind</label>
+            <select id="replicate">
+              <option value="sanity">sanity</option>
+              <option value="technical">technical</option>
+              <option value="reseat">reseat</option>
+            </select>
+          </div>
+          <button id="btn-scout" type="button">Scout Peak ($RD)</button>
+          <div id="gauge"><span id="gauge-fill"></span></div>
+          <div id="scout-readout" class="metrics">I = —</div>
+        </section>
+
+        <section class="step" data-step="5">
+          <div class="title">Staged Scan</div>
+          <label class="check"><input type="checkbox" id="include-dark" checked /> Include dark arm</label>
+          <p id="acquire-duration" class="hint"></p>
+          <button id="btn-scan" type="button">Run Staged Scan</button>
+        </section>
+      </div>
+
+      <!-- RESULTS rail -->
+      <div class="tab-panel" data-for="results" hidden>
+        <section class="step">
+          <div class="title">Run Browser</div>
+          <div class="field">
+            <label for="run-filter">Filter</label>
+            <input id="run-filter" type="search" placeholder="experiment / id…" />
+          </div>
+          <div class="field">
+            <label for="blank">Blank CSV</label>
+            <select id="blank"><option value="">(none)</option></select>
+          </div>
+          <div id="run-list" class="run-list"></div>
+        </section>
+      </div>
+    </aside>
+
+    <section id="center">
+      <div id="setup-main" class="setup-main">
+        <h2>Instrument ready</h2>
+        <p class="hint">
+          Configure connect, method, and sample on the left. Synoptic above shows
+          commanded vs readback. Switch to <strong>Acquire</strong> to scout and scan.
+        </p>
+        <div id="setup-status" class="metrics">Disconnected — Probe or Connect when USB is up.</div>
+      </div>
+      <div id="plot" hidden></div>
+    </section>
+
+    <aside id="context">
+      <div class="tab-panel" data-for="setup">
+        <h2>Session</h2>
+        <div id="setup-session" class="metrics">No session</div>
+        <p class="hint">Stage 0 health strip stays visible on every tab. Xe OFF / Abort are always armed.</p>
+      </div>
+      <div class="tab-panel" data-for="acquire" hidden>
+        <h2>Acquire</h2>
+        <div id="acquire-phase" class="metrics">Phase —</div>
+        <div id="acquire-clip" class="metrics" style="margin-top:0.45rem;">Clip ok</div>
+      </div>
+      <div class="tab-panel" data-for="results" hidden>
+        <h2>Data Calculator</h2>
+        <div class="field">
+          <label for="review-mode">Review mode</label>
+          <select id="review-mode">
+            <option value="fluorescence">Fluorescence / Raman</option>
+            <option value="transmission">Transmission / Absorbance</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Half-window nm</label>
+          <input id="half-window" type="number" step="0.1" value="25" />
+        </div>
+        <div class="row">
+          <div class="field"><label>Noise lo</label><input id="noise-lo" type="number" step="0.1" value="410" /></div>
+          <div class="field"><label>Noise hi</label><input id="noise-hi" type="number" step="0.1" value="420" /></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Wing L lo</label><input id="wing-ll" type="number" step="0.1" value="380" /></div>
+          <div class="field"><label>Wing L hi</label><input id="wing-lh" type="number" step="0.1" value="386" /></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Wing R lo</label><input id="wing-rl" type="number" step="0.1" value="410" /></div>
+          <div class="field"><label>Wing R hi</label><input id="wing-rh" type="number" step="0.1" value="420" /></div>
+        </div>
+        <button id="btn-recompute" class="secondary" type="button">Recompute Review</button>
+        <div id="metrics" class="metrics" style="margin-top:0.55rem;">
+          Peak —<br />Δλ —<br />Abs SNR —<br />Contrast SNR —
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="log-shell" class="log-shell" data-open="false">
+    <button type="button" id="btn-log-toggle" class="secondary log-toggle">Log</button>
+    <div id="logdrawer" class="logdrawer"></div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

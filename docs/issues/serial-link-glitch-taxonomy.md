@@ -7,7 +7,7 @@ This document analyzes the two RS-232 anomaly classes observed during bring-up a
 Refresh corpus statistics at any time with:
 
 ```bash
-python scripts/analyze_serial_glitches.py
+uv run python scripts/analyze_serial_glitches.py
 ```
 
 ---

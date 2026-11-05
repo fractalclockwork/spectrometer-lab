@@ -86,6 +86,48 @@ def load_freepath_csv(
     return wavelength_nm, dark, empty_on
 
 
+def load_blank_intensity_csv(
+    path: Path,
+) -> Tuple[list[float], list[float]]:
+    """
+    Load blank wavelength + ON intensity from freepath or corrected CSV.
+
+    Accepts either:
+    - freepath shape: ``wavelength_nm,dark,empty_on`` (uses ``empty_on``)
+    - corrected shape: ``wavelength_nm,sample_on,...`` (uses ``sample_on``)
+
+    Prefer freepath column shape for solvent blanks acquired with the freepath
+    runner (water-in-cuvette ON spectrum stored as ``empty_on``).
+    """
+    path = Path(path)
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        if reader.fieldnames is None:
+            raise ValueError(f"{path}: missing CSV header")
+        fields = set(reader.fieldnames)
+        if "wavelength_nm" not in fields:
+            raise ValueError(
+                f"{path}: expected wavelength_nm column; got {reader.fieldnames!r}"
+            )
+        if "empty_on" in fields:
+            intensity_key = "empty_on"
+        elif "sample_on" in fields:
+            intensity_key = "sample_on"
+        else:
+            raise ValueError(
+                f"{path}: expected empty_on or sample_on intensity column; "
+                f"got {reader.fieldnames!r}"
+            )
+        wavelength_nm: list[float] = []
+        intensity: list[float] = []
+        for row in reader:
+            wavelength_nm.append(float(row["wavelength_nm"]))
+            intensity.append(float(row[intensity_key]))
+    if not wavelength_nm:
+        raise ValueError(f"{path}: no data rows")
+    return wavelength_nm, intensity
+
+
 @dataclass(frozen=True)
 class BlankSubtractedSpectrum:
     wavelength_nm: list[float]

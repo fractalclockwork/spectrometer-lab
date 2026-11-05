@@ -33,7 +33,7 @@ Acquire the water O–H stretch Raman band (~`3400 cm⁻¹` → ~`397 nm` at Ex 
 Acquire a **new** freepath blank at the same Ex, slits, speed, and step; Em must cover at least `380–420`. Empty compartment (cuvette removed), door closed:
 
 ```bash
-python scripts/run_freepath_serial.py \
+uv run python scripts/run_freepath_serial.py \
   --port /dev/serial/by-id/<adapter> \
   --stage2-pass --compartment-closed --baud 9600 \
   --em-lo 380 --em-hi 420 --slit 10 \
@@ -75,7 +75,7 @@ Share one `--series-id` (e.g. wall-clock stamp) across all runs after sanity:
 Then:
 
 ```bash
-python scripts/summarize_water_raman.py --series-id <stamp>
+uv run python scripts/summarize_water_raman.py --series-id <stamp>
 ```
 
 ---
@@ -88,22 +88,22 @@ BLANK=logs/freepath/freepath-<stamp>.csv
 SERIES=$(date +%Y%m%d-%H%M%S)
 
 # Sanity
-python scripts/run_water_raman_serial.py \
+uv run python scripts/run_water_raman_serial.py \
   --port "$PORT" --stage2-pass --sample-loaded --baud 9600 \
   --blank "$BLANK" --replicate-kind sanity --series-id "$SERIES"
 
 # Technical replicate (repeat ×5)
-python scripts/run_water_raman_serial.py \
+uv run python scripts/run_water_raman_serial.py \
   --port "$PORT" --stage2-pass --sample-loaded --baud 9600 \
   --blank "$BLANK" --replicate-kind technical --series-id "$SERIES"
 
 # Reseat replicate (repeat ×5 after reseating)
-python scripts/run_water_raman_serial.py \
+uv run python scripts/run_water_raman_serial.py \
   --port "$PORT" --stage2-pass --sample-loaded --baud 9600 \
   --blank "$BLANK" --replicate-kind reseat --series-id "$SERIES"
 
 # Offline dry-run (fixture Em range must match --em-lo/--em-hi)
-python scripts/run_water_raman_serial.py \
+uv run python scripts/run_water_raman_serial.py \
   --fixture-dir tests/fixtures/freepath_happy \
   --stage2-pass --sample-loaded \
   --blank /path/to/blank.csv \
